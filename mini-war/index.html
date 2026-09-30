@@ -735,9 +735,9 @@ function updateEffects(dt){
 }
 // Placement phase: no fighting, but drops, dust, birds and effects keep moving.
 function settle(dt){
-  for(const u of S.units){ u.walk += dt*2; if(u.flash>0) u.flash -= dt;
+  for(const u of S.units){ u.walk += dt*2; if(u.flash>0) u.flash -= dt; if(u.lflash>0) u.lflash -= dt;
     if(u.z>0 || u.vz){ u.vz -= GRAV*dt; u.z += u.vz*dt;
-      if(u.z<=0){ u.z = 0; u.vz = 0; u.flash = 0.06; for(let i=0;i<5;i++) part(u.x+rnd(-3,3), u.y, 1, rnd(-25,25), rnd(-8,8), rnd(10,30), pick(DUST), 1, 0.5, false); } } }
+      if(u.z<=0){ u.z = 0; u.vz = 0; u.lflash = 0.08; for(let i=0;i<5;i++) part(u.x+rnd(-3,3), u.y, 1, rnd(-25,25), rnd(-8,8), rnd(10,30), pick(DUST), 1, 0.5, false); } } }
   updateEffects(dt);
 }
 function spawnBirds(theme){
@@ -804,7 +804,7 @@ function drawFig(g, type, team, X, Y, face, o, st, sOverride){
     g.fillStyle = fl || c; g.fillRect(Math.round(X+(a+0.5)*s), Math.round(Y+b*s), Math.round((c2-a)*s), Math.round((d2-b)*s));
   };
   const walk = st.moving ? (Math.floor(st.walk)%2) : 0, sw = st.atk>0 ? 1 : 0;
-  const fl = st.flash>0 ? (st.flash>0.07 ? '#ffffff' : '#ff6262') : null;
+  const fl = st.flash>0 ? (st.flash>0.07 ? '#ffffff' : '#ff6262') : st.lflash>0 ? '#ffffff' : null;
   const torso = st.dead ? tc[1] : tc[0];
   if(walk && !st.dead && o===0) Y -= 1;
   if(d.machine){
@@ -865,9 +865,10 @@ function render(){
   if(S.shake>0) g.translate(Math.round(rnd(-S.shake,S.shake)), Math.round(rnd(-S.shake,S.shake)));
   g.drawImage(ground, 0, 0);
   if(S.phase==='place' && mode!=='title'){
-    g.fillStyle = 'rgba(90,150,255,0.13)'; g.fillRect(0,0,ZONE_P,H);
-    g.fillStyle = 'rgba(140,190,255,0.55)'; for(let y=0;y<H;y+=4) g.fillRect(ZONE_P,y,1,2);
-    if(mode==='sandbox'){ g.fillStyle='rgba(180,90,230,0.13)'; g.fillRect(ZONE_E,0,W-ZONE_E,H); g.fillStyle='rgba(210,150,255,0.55)'; for(let y=0;y<H;y+=4) g.fillRect(ZONE_E,y,1,2); }
+    const zl = zoneL(), zr = zoneR();
+    g.fillStyle = 'rgba(90,150,255,0.13)'; g.fillRect(0,0,zl,H);
+    g.fillStyle = 'rgba(140,190,255,0.55)'; for(let y=0;y<H;y+=4) g.fillRect(zl,y,1,2);
+    if(mode==='sandbox'){ g.fillStyle='rgba(180,90,230,0.13)'; g.fillRect(zr,0,W-zr,H); g.fillStyle='rgba(210,150,255,0.55)'; for(let y=0;y<H;y+=4) g.fillRect(zr,y,1,2); }
     if(hover && tool){ const ok = canPlaceAt(hover.x, hover.y);
       if(tool!=='erase'){ g.strokeStyle = ok ? 'rgba(190,255,170,0.75)' : 'rgba(255,90,90,0.75)'; g.lineWidth = 1; g.strokeRect(hover.gx-GRID/2+0.5, hover.gy-3-GRID/2+0.5, GRID-1, GRID-1); }
       if(tool==='erase'){ g.strokeStyle='rgba(255,80,80,0.8)'; g.strokeRect(hover.x-5.5, hover.y-8.5, 11, 11); }
@@ -904,6 +905,7 @@ function render(){
       for(let i=0;i<f.pts.length-1;i++){ const [x1,y1]=f.pts[i], [x2,y2]=f.pts[i+1]; const n = Math.max(2, Math.hypot(x2-x1,y2-y1)/2|0);
         for(let k=0;k<=n;k++){ const t=k/n; g.fillRect(Math.round(x1+(x2-x1)*t+rnd(-1.5,1.5)), Math.round(y1+(y2-y1)*t+rnd(-1.5,1.5)), 1, 1); } } }
     else if(f.k==='spark'){ g.fillStyle = f.c; const x = Math.round(f.x), y = Math.round(f.y), a = f.life > 0.05 ? 2 : 1; g.fillRect(x, y, 1, 1); g.fillRect(x-a, y, 1, 1); g.fillRect(x+a, y, 1, 1); g.fillRect(x, y-a, 1, 1); g.fillRect(x, y+a, 1, 1); }
+    else if(f.k==='nope'){ g.fillStyle = '#ff4040'; const x = Math.round(f.x), y = Math.round(f.y); for(let i=-2;i<=2;i++){ g.fillRect(x+i, y+i, 1, 1); g.fillRect(x+i, y-i, 1, 1); } }
     else if(f.k==='pop'){ const t = 1 - f.life/f.max, r = (2 + t*5)*f.s; g.fillStyle = t < 0.5 ? '#ffffff' : '#ffb0b0';
       for(let k=0;k<8;k++){ const a = k*0.785; g.fillRect(Math.round(f.x+Math.cos(a)*r), Math.round(f.y+Math.sin(a)*r*0.7), 1, 1); } }
     else if(f.k==='slash'){ const t = 1 - f.life/f.max, n = Math.ceil(t*8); g.fillStyle = t < 0.6 ? '#ffffff' : '#c8d0d8';
@@ -1244,12 +1246,16 @@ function setSpeed(v){ if(v>0) lastSpeed = v; speed = v; for(const b of $('speedC
 $('speedCtl').onclick = e=>{ const b = e.target.closest('button'); if(b) setSpeed(+b.dataset.sp); };
 
 // ----- Placement -----
+// Campaign: you get the left third. Sandbox: each army gets almost half the field.
+function zoneL(){ return mode==='sandbox' ? 228 : ZONE_P; }
+function zoneR(){ return mode==='sandbox' ? 252 : ZONE_E; }
+function sideAt(x){ return mode==='sandbox' && x >= W/2 ? 1 : 0; }
+function inZoneFor(tm, gx){ return tm===0 ? gx < zoneL() : gx > zoneR(); }
 function snap(p){ return {x:p.x, y:p.y, gx:Math.floor(p.x/GRID)*GRID+GRID/2, gy:Math.floor(p.y/GRID)*GRID+GRID/2+3}; }
 function canPlaceAt(x, y){
   if(!tool || tool==='erase') return false;
   const s = snap({x,y}), d = U[tool];
-  const inZone = team===0 ? s.gx < ZONE_P : s.gx > ZONE_E;
-  if(!inZone || s.gy < 12 || s.gy > H-3) return false;
+  if(!inZoneFor(sideAt(s.gx), s.gx) || s.gy < 12 || s.gy > H-3) return false;
   if(mode==='campaign' && d.cost > gold) return false;
   if(mode==='sandbox' && S.units.length >= 600) return false;
   for(const u of S.units){ const need = Math.max(GRID*0.9, (u.d.r + d.r)*0.85); if(Math.abs(u.x-s.gx) < need && Math.abs(u.y-s.gy) < need) return false; }
@@ -1265,13 +1271,13 @@ function placeAt(p, erase){
     if(best){ removeUnit(best); refreshTray(); }
     return;
   }
+  const tm = sideAt(s.gx); team = tm;
   if(!canPlaceAt(p.x, p.y)){
-    const inZone = team===0 ? s.gx < ZONE_P : s.gx > ZONE_E;
-    if(!inZone) deny(mode==='sandbox' ? 'Place troops in the blue zone (left) or the purple zone (right).' : 'Troops go in the blue zone on the left.');
+    if(!inZoneFor(tm, s.gx)){ S.fx.push({k:'nope', x:s.gx, y:s.gy-3, life:0.5, max:0.5}); deny(mode==='sandbox' ? 'Too close to the middle. Place troops in the blue (left) or purple (right) area.' : 'Troops go in the blue zone on the left.'); }
     else if(mode==='campaign' && U[tool].cost > gold) deny(`Not enough gold. ${U[tool].name} costs ${U[tool].cost}.`);
     return;
   }
-  const nu = spawn(tool, team, s.gx, s.gy); nu.z = 14; nu.vz = -40; placed.push(nu); ui('place');
+  const nu = spawn(tool, tm, s.gx, s.gy); nu.z = 14; nu.vz = -40; placed.push(nu); ui('place');
   if(mode==='campaign'){ gold -= U[tool].cost; S.fx.push({k:'num', x:s.gx, y:s.gy-14, txt:'-'+U[tool].cost, c:'#f0b93b', life:0.7, max:0.7}); }
   refreshTray();
 }
@@ -1303,12 +1309,12 @@ cv.addEventListener('pointerdown', e=>{
     return;
   }
   painting = true; eraseDrag = e.button===2 || e.shiftKey;
-  const fp = toField(e); if(mode==='sandbox') team = fp.x >= W/2 ? 1 : 0;
+  const fp = toField(e);
   placeAt(fp, eraseDrag);
 });
 cv.addEventListener('pointermove', e=>{
   hover = snap(toField(e));
-  if(mode==='sandbox' && !painting) team = hover.x >= W/2 ? 1 : 0;
+  if(!painting) team = sideAt(hover.gx);
   if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   if(mmDrag){ const m = inMinimap(e); if(m) centerOn(m.x, m.y); return; }
   if(pinch && ptrs.size===2){ const [a,b] = [...ptrs.values()], d = Math.hypot(a.x-b.x, a.y-b.y)||1, r = cv.getBoundingClientRect();
@@ -1505,10 +1511,11 @@ function present(){
   g.globalAlpha = 1;
   if(S.flashScreen > 0){ g.fillStyle = `rgba(255,245,220,${Math.min(0.5, S.flashScreen*4)})`; g.fillRect(0, 0, dw, dh); }
   if(mode!=='title' && S.phase==='place'){
-    label(mode==='sandbox' ? 'BLUE SIDE' : 'YOUR SIDE', sx(ZONE_P/2), Math.max(sy(0)+fs*1.4, off+fs), '#9bbcff');
-    label(mode==='sandbox' ? 'PURPLE SIDE' : 'ENEMY ARMY', sx((ZONE_E+W)/2), Math.max(sy(0)+fs*1.4, off+fs), mode==='sandbox' ? '#d8a0f5' : '#ff8a8a');
+    label(mode==='sandbox' ? 'BLUE SIDE' : 'YOUR SIDE', sx(zoneL()/2), Math.max(sy(0)+fs*1.4, off+fs), '#9bbcff');
+    label(mode==='sandbox' ? 'PURPLE SIDE' : 'ENEMY ARMY', sx((zoneR()+W)/2), Math.max(sy(0)+fs*1.4, off+fs), mode==='sandbox' ? '#d8a0f5' : '#ff8a8a');
     const mine = S.units.some(u=>u.team===0);
-    if(!mine && tool && tool!=='erase' && team===0 && $('scDialog').hidden){ const b = Math.sin(performance.now()/180)*fs*0.3; label('PLACE TROOPS HERE', sx(ZONE_P/2), sy(H/2)+b, '#f0b93b'); }
+    if(!mine && tool && tool!=='erase' && team===0 && $('scDialog').hidden){ const b = Math.sin(performance.now()/180)*fs*0.3; label('PLACE TROOPS HERE', sx(zoneL()/2), sy(H/2)+b, '#f0b93b'); }
+    if(mode==='sandbox' && !S.units.some(u=>u.team===1) && S.units.some(u=>u.team===0) && tool && tool!=='erase'){ const b = Math.sin(performance.now()/180)*fs*0.3; label('NOW PLACE PURPLE HERE', sx((zoneR()+W)/2), sy(H/2)+b, '#d8a0f5'); }
   }
   if(mode!=='title' && S.phase==='fight' && speed===0) label('PAUSED  ·  press P', dw/2, dh/2, '#f0b93b', fs*1.6);
   else if(mode!=='title' && S.phase==='fight' && speed<1) label('SLOW-MO ' + (speed===0.25 ? '¼' : '½') + 'x', dw/2, fs*1.4, '#9fd4ff');
