@@ -87,16 +87,43 @@ button{font:inherit;color:inherit}
 .topbar .btn.fight{font-size:17px;padding:8px 22px}
 
 /* Tray */
-#tray{display:flex;gap:10px;align-items:stretch;padding:8px 16px;background:var(--panel);border-top:2px solid var(--line);min-height:92px}
+#tray{display:flex;gap:12px;align-items:center;padding:8px 16px;background:var(--panel);border-top:2px solid var(--line);max-height:38vh}
 .tray-l{display:flex;flex-direction:column;gap:6px;justify-content:center;flex:0 0 auto}
 .tray-label{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;line-height:1.2}
-#cards{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding:4px 2px 4px}
-.card{flex:0 0 auto;width:76px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative;box-shadow:0 3px 0 #0008}
+#cards{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;flex:1;min-width:0;max-height:calc(38vh - 20px);overflow-y:auto;padding:5px 4px 4px}
+.grp-l{align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--f-display);font-size:10px;letter-spacing:.14em;padding:4px 3px;border:2px solid var(--line);background:var(--soil)}
+.grp-l.t0{color:var(--blue)} .grp-l.t1{color:var(--purple)}
+/* themed scrollbars */
+*{scrollbar-width:thin;scrollbar-color:var(--line) var(--soil)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--soil)}
+::-webkit-scrollbar-thumb{background:var(--line);border:2px solid var(--soil)}
+::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+::-webkit-scrollbar-corner{background:var(--soil)}
+/* custom tooltip */
+#tip{position:fixed;z-index:60;pointer-events:none;max-width:290px;background:#120e0bf5;border:2px solid var(--gold);box-shadow:4px 4px 0 #000;padding:9px 11px;font-size:13px;line-height:1.35;color:var(--ink);animation:tipin .12s ease-out}
+@keyframes tipin{from{opacity:0;transform:translateY(4px)}}
+#tip .th{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+#tip .th canvas{width:40px;height:40px;image-rendering:pixelated;background:var(--panel-2);border:2px solid var(--line);flex:0 0 auto}
+#tip .tn{font-family:var(--f-display);font-size:15px;line-height:1.1}
+#tip .tr{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+#tip .tc{margin-left:auto;font-family:var(--f-display);font-size:13px;color:var(--gold);white-space:nowrap}
+#tip p{margin:0 0 6px;color:var(--ink)}
+#tip .sw{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-bottom:6px}
+#tip .sw b{font-weight:400;font-family:var(--f-display);font-size:10px;letter-spacing:.06em;padding-top:2px}
+#tip .sw .g{color:var(--ok)} #tip .sw .r{color:#ff7a7a}
+#tip .bars{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-items:center;font-size:11px;color:var(--dim)}
+#tip .pips{display:flex;gap:2px}
+#tip .pips i{width:14px;height:6px;background:#3a2e25}
+#tip .pips i.on{background:var(--gold)}
+#tip .tk{margin-top:6px;font-size:11px;color:var(--dim)}
+#tip.small{max-width:220px;padding:5px 9px;font-size:12px}
+.card{flex:0 0 auto;width:70px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative;box-shadow:0 3px 0 #0008}
 .card{transition:transform .08s,border-color .08s}
 .card:hover{border-color:var(--ink);transform:translateY(-2px)}
 .card:active{transform:translateY(1px)}
-.card canvas{width:40px;height:40px;image-rendering:pixelated}
-.card .nm{font-size:11px;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.card canvas{width:34px;height:34px;image-rendering:pixelated}
+.card .nm{font-size:10.5px;letter-spacing:-.01em;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .card .cost{font-family:var(--f-display);font-size:11px;color:var(--gold)}
 .card .key{position:absolute;top:2px;left:4px;font-family:var(--f-display);font-size:9px;color:var(--dim)}
 .card.sel{border-color:var(--gold);background:#4a3a1c;transform:translateY(-3px);box-shadow:0 3px 0 var(--gold)}
@@ -108,18 +135,6 @@ button{font:inherit;color:inherit}
 @keyframes nudge{50%{border-color:var(--gold)}}
 .tray-tools{display:flex;flex-direction:column;gap:5px;justify-content:center}
 .tray-tools .btn{font-size:11px;padding:4px 10px}
-.teampick{display:flex;flex-direction:column;gap:4px}
-.teampick .btn{padding:4px 8px;font-size:11px}
-.teampick .btn.on.t0{background:var(--blue);border-color:#9bbcff;color:#fff}
-.teampick .btn.on.t1{background:var(--purple);border-color:#d8a0f5;color:#fff}
-.info{width:230px;flex:0 0 auto;background:var(--panel-2);border:2px solid var(--line);padding:6px 10px;font-size:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.info h4{margin:0;font-family:var(--f-display);font-size:13px;font-weight:400;display:flex;justify-content:space-between;gap:8px}
-.info h4 .c{color:var(--gold)}
-.info p{margin:0;color:var(--dim);line-height:1.3}
-.bars{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;font-size:11px}
-.pips{display:flex;gap:2px}
-.pips i{width:12px;height:6px;background:#3a2e25}
-.pips i.on{background:var(--gold)}
 
 /* Screens */
 .screen{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;overflow-y:auto;animation:fadein .25s}
@@ -186,13 +201,16 @@ button{font:inherit;color:inherit}
 
 body.m-title #hud, body.m-title #tray, body.m-title #hint, body.m-title .zoomctl{display:none}
 body.m-map #hud, body.m-map #tray{display:none}
-@media (max-width:1100px){ .info{display:none} }
 @media (max-width:760px){
   #hudChapter{display:none} #hud{padding:6px 12px} #hudLevel{font-size:14px}
   .steps li:not(.now){display:none} .steps{margin:0}
   .btn{padding:5px 8px;font-size:12px} .btn.fight{padding:5px 12px;font-size:14px}
   .seg-l{display:none} .seg button{padding:4px 6px;min-width:28px;font-size:12px}
-  #tray{padding:6px 12px} .tray-label{display:none}
+  #tray{padding:6px 12px;flex-wrap:wrap;gap:6px} .tray-label{display:none} .tray-l{display:none}
+  #cards{flex:1 1 100%;max-height:24vh;gap:4px}
+  .card{width:58px;padding:3px 1px} .card canvas{width:28px;height:28px} .card .nm{font-size:9.5px} .card .key{display:none}
+  .grp-l{font-size:8px}
+  .tray-tools{flex-direction:row;width:100%;justify-content:flex-end}
   .zoomctl button{width:30px;height:30px}
   .topbar{top:6px;gap:6px;padding:4px 4px 4px 8px} .tb-gold b{font-size:15px} .tb-of,.goldbar{display:none} .topbar .btn.fight{font-size:13px;padding:6px 12px}
 }
@@ -212,14 +230,14 @@ body.m-map #hud, body.m-map #tray{display:none}
     <div class="hud-actions">
       <div id="speedCtl" class="seg" role="group" aria-label="Battle speed">
         <span class="seg-l">Speed</span>
-        <button data-sp="0" title="Pause (P)">II</button>
-        <button data-sp="0.25" title="Quarter speed">&frac14;</button>
-        <button data-sp="0.5" title="Half speed">&frac12;</button>
-        <button data-sp="1" class="on" title="Normal speed">1x</button>
-        <button data-sp="2" title="Double speed">2x</button>
+        <button data-sp="0" data-tip="Pause (P)">II</button>
+        <button data-sp="0.25" data-tip="Quarter speed">&frac14;</button>
+        <button data-sp="0.5" data-tip="Half speed">&frac12;</button>
+        <button data-sp="1" class="on" data-tip="Normal speed">1x</button>
+        <button data-sp="2" data-tip="Double speed">2x</button>
       </div>
       <button id="btnField" class="btn" hidden>Field</button>
-      <button id="btnSound" class="btn icon" title="Sound on/off (M)" aria-label="Sound on/off"></button>
+      <button id="btnSound" class="btn icon" data-tip="Sound on/off (M)" aria-label="Sound on/off"></button>
     </div>
   </header>
   <main id="stage">
@@ -232,9 +250,9 @@ body.m-map #hud, body.m-map #tray{display:none}
       </div>
       <div class="zoomctl">
         <span class="zl" id="zLvl">1.0x</span>
-        <button id="zIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
-        <button id="zOut" title="Zoom out (-)" aria-label="Zoom out">&minus;</button>
-        <button id="zFit" title="Show whole field (0)">FIT</button>
+        <button id="zIn" data-tip="Zoom in (+)" aria-label="Zoom in">+</button>
+        <button id="zOut" data-tip="Zoom out (-)" aria-label="Zoom out">&minus;</button>
+        <button id="zFit" data-tip="Show whole field (0)">FIT</button>
       </div>
       <div id="hint" hidden></div>
     </div>
@@ -250,19 +268,15 @@ body.m-map #hud, body.m-map #tray{display:none}
   <footer id="tray">
     <div class="tray-l">
       <span class="tray-label">Your<br>troops</span>
-      <div class="teampick" id="teamPick" hidden>
-        <button class="btn t0 on" data-team="0">Blue</button>
-        <button class="btn t1" data-team="1">Purple</button>
-      </div>
     </div>
     <div id="cards"></div>
     <div class="tray-tools">
-      <button id="btnUndo" class="btn" title="Undo last troop (Z)">Undo</button>
-      <button id="btnErase" class="btn" title="Remove troops (R)">Remove</button>
-      <button id="btnClear" class="btn" title="Remove all your troops">Clear all</button>
+      <button id="btnUndo" class="btn" data-tip="Undo last troop (Z)">Undo</button>
+      <button id="btnErase" class="btn" data-tip="Remove troops (R)">Remove</button>
+      <button id="btnClear" class="btn" data-tip="Remove all your troops">Clear all</button>
     </div>
-    <div id="info" class="info"></div>
   </footer>
+  <div id="tip" hidden></div>
 
   <section id="scTitle" class="screen">
     <div class="logo">MINI<br><span>WAR</span></div>
@@ -331,6 +345,28 @@ const U = {
   troll:    {name:'Troll', cost:120, hp:420, dmg:28, range:8, cd:1.7, spd:13, r:7, mass:10, scale:2, skin:'troll', hat:'none', wpn:'log', cleave:true, kb:70, regen:5, desc:'Regenerates. Hits like a falling tree.'},
   warlord:  {name:'Grubnak', cost:500, hp:2400, dmg:48, range:11, cd:1.4, spd:16, r:9, mass:25, scale:3, skin:'orc', hat:'crown', wpn:'bigaxe', cleave:true, kb:130, regen:4, desc:'The Warlord himself.'},
 };
+const LORE = {
+  peasant:  ['Melee \u00b7 Cheap', 'A farmer with a club and a lot of courage. Weak alone, scary in a big mob.', 'Swarming, soaking hits', 'Archers, anything big'],
+  spear:    ['Melee \u00b7 Anti-cavalry', 'Keeps foes at arm\'s length. Deals triple damage to Knights, Wolf Riders and anything else on a mount.', 'Wolf Riders, Knights', 'Archers, Trolls'],
+  archer:   ['Ranged', 'Fires arrows over your front line. Needs someone in front to keep enemies away.', 'Slow troops, Goblins', 'Wolf Riders, Shieldbearers'],
+  shield:   ['Tank', 'A walking wall. Blocks 80% of arrow damage from the front and shrugs off 30% of melee damage.', 'Archers, holding a line', 'Flanks, Giants'],
+  berserker:['Melee \u00b7 Fast', 'Sprints ahead swinging two axes. Huge damage, but drops fast when focused.', 'Archers, Shamans', 'Spear walls, Trolls'],
+  knight:   ['Cavalry \u00b7 Charge', 'Charges on horseback. The first hit after a run deals triple damage and sends enemies flying.', 'Archers, back lines', 'Spearmen'],
+  monk:     ['Support \u00b7 Healer', 'Stays behind the fighting and heals the most wounded ally nearby. Runs away from enemies.', 'Keeping tanks alive', 'Fireballs, being alone'],
+  catapult: ['Siege \u00b7 Splash', 'Hurls boulders across the whole field. The splash hurts your own troops too, so aim it at crowds.', 'Big crowds, Skeletons', 'Anything that reaches it'],
+  bomber:   ['Explosive \u00b7 One use', 'Runs into the enemy and blows up, launching everything nearby. Also hurts friends.', 'Tight crowds, Trolls', 'Archers'],
+  giant:    ['Heavy \u00b7 Cleave', 'Swings a tree-sized club that hits every enemy in front of him and knocks them flying.', 'Crowds, Skeletons', 'Archer swarms'],
+  wizard:   ['Magic \u00b7 Chain', 'Casts lightning that jumps between up to 4 enemies. Fragile, so keep him at the back.', 'Groups, Goblins', 'Wolf Riders, Berserkers'],
+  goblin:   ['Melee \u00b7 Swarm', 'Small, fast and stabby. Never travels alone.', 'Numbers, speed', 'Splash, cleaves'],
+  gobarcher:['Ranged', 'A goblin with a bow. Terrible aim, lots of friends.', 'Unarmored troops', 'Shieldbearers, riders'],
+  wolf:     ['Cavalry \u00b7 Flanker', 'A goblin on a big angry wolf. Charges straight into your back line.', 'Archers, Monks', 'Spearmen'],
+  orc:      ['Melee \u00b7 Bruiser', 'Tough, angry and hits hard. The backbone of the Horde.', 'Peasants, Goblins', 'Knights, Wizards'],
+  skeleton: ['Melee \u00b7 Undead', 'Rattling bones with a rusty sword. Cheap, weak and endless.', 'Numbers', 'Giants, Catapults'],
+  shaman:   ['Ranged \u00b7 Fire', 'Throws fireballs that splash when they land.', 'Clumped troops', 'Knights, Berserkers'],
+  troll:    ['Heavy \u00b7 Regenerates', 'Heals itself all the time and smashes whole squads with a log.', 'Crowds', 'Burst damage, Bombers'],
+  warlord:  ['Boss', 'Grubnak himself. Enormous, regenerating and extremely loud.', 'Everything', 'Being surrounded'],
+};
+const SHORT = {shield:'Shield', gobarcher:'Gob Archer', wolf:'Wolf Rider', shaman:'Shaman', catapult:'Catapult', berserker:'Berserker'};
 const PLAYER_ORDER = ['peasant','spear','archer','shield','berserker','knight','monk','catapult','bomber','giant','wizard'];
 const HORDE_ORDER = ['goblin','gobarcher','wolf','orc','skeleton','shaman','troll','warlord'];
 const UNLOCKS = {0:'spear',1:'archer',2:'shield',3:'berserker',4:'knight',5:'monk',7:'catapult',8:'bomber',10:'giant',12:'wizard'};
@@ -1090,7 +1126,7 @@ function startLevel(i){
   budget = lv.budget; gold = budget;
   if(lastPlacement[i]) for(const p of lastPlacement[i]){ if(gold >= U[p.type].cost){ spawn(p.type, 0, p.x, p.y); gold -= U[p.type].cost; } }
   $('hudChapter').textContent = `Chapter ${lv.ch+1} · ${ch.name}`; $('hudLevel').textContent = `${i+1}. ${lv.name}`;
-  $('teamPick').hidden = true; $('btnField').hidden = true;
+  $('btnField').hidden = true;
   tool = null;
   buildTray(playerUnits(save.beaten), true); placeUI();
   const intro = lastPlacement[i] ? [] : lv.intro;
@@ -1101,33 +1137,32 @@ function startSandbox(){
   newBattle(sandboxTheme);
   if(sandboxSetup) for(const p of sandboxSetup) spawn(p.type, p.team, p.x, p.y);
   $('hudChapter').textContent = 'No budget · no rules'; $('hudLevel').textContent = 'Sandbox';
-  $('teamPick').hidden = false; $('btnField').hidden = false; $('btnField').textContent = 'Field: ' + THEMES[sandboxTheme].name;
-  const list = playerUnits(save.beaten).concat(hordeUnits(save.beaten));
-  if(!list.includes(tool)) tool = null;
-  buildTray(list, false); placeUI();
-  if(!hordeUnits(save.beaten).length) setHint('Win campaign battles to unlock more troops here.', 4000);
+  $('btnField').hidden = false; $('btnField').textContent = 'Field: ' + THEMES[sandboxTheme].name;
+  team = 0;
+  if(tool && tool!=='erase' && !U[tool]) tool = null;
+  buildTray(PLAYER_ORDER.concat(HORDE_ORDER), false); placeUI();
+  setHint('Every troop is unlocked here. Left side = Blue army, right side = Purple army.', 5000);
 }
 function buildTray(list, showLocked){
   const wrap = $('cards'); wrap.innerHTML = '';
   list.forEach((type, i)=>{
+    if(mode==='sandbox' && (i===0 || type===HORDE_ORDER[0])){ const l = document.createElement('span'); l.className = 'grp-l ' + (i===0 ? 't0' : 't1'); l.textContent = i===0 ? 'TINYVALE' : 'HORDE'; wrap.appendChild(l); }
     const d = U[type], b = document.createElement('button'); b.className = 'card'; b.dataset.type = type;
-    b.title = `${d.name}: ${d.desc}`;
-    b.appendChild(iconCanvas(type, mode==='sandbox' ? team : 0));
+    b.appendChild(iconCanvas(type, HORDE_ORDER.includes(type) ? 1 : 0));
     b.insertAdjacentHTML('beforeend', `${i<9?`<span class="key">${i+1}</span>`:''}<span class="nm"></span><span class="cost">${mode==='sandbox' ? '&nbsp;' : d.cost+'g'}</span>`);
-    b.querySelector('.nm').textContent = d.name;
+    b.querySelector('.nm').textContent = SHORT[type] || d.name;
     b.onclick = ()=>{ selectTool(type); };
-    b.onmouseenter = ()=>showInfo(type); b.onmouseleave = ()=>showInfo(tool);
     wrap.appendChild(b);
   });
   if(showLocked){
     const next = Object.keys(UNLOCKS).map(Number).find(k=>k >= save.beaten);
     if(next !== undefined){ const b = document.createElement('div'); b.className = 'card locked'; b.appendChild(iconCanvas(UNLOCKS[next], 0));
-      b.insertAdjacentHTML('beforeend', `<span class="nm">Locked</span><span class="cost" style="color:var(--dim)">Win #${next+1}</span>`); b.title = `A new troop unlocks after battle ${next+1}`; wrap.appendChild(b); }
+      b.insertAdjacentHTML('beforeend', `<span class="nm">Locked</span><span class="cost" style="color:var(--dim)">Win #${next+1}</span>`); b.dataset.tip = `A new troop unlocks when you win battle ${next+1}.`; wrap.appendChild(b); }
   }
-  refreshTray(); showInfo(tool);
+  refreshTray();
 }
 function selectTool(type){
-  tool = type; ui('select'); refreshTray(); showInfo(type);
+  tool = type; ui('select'); refreshTray();
   if(type==='erase') setHint('Click or drag over troops to remove them. Gold is refunded.', 3000); else setHint('');
 }
 function refreshTray(){
@@ -1139,15 +1174,15 @@ function refreshTray(){
 }
 const PIPS = {hp:[30,60,120,300,700], dmg:[4,8,14,22,35], spd:[12,18,25,35,45], range:[5,11,60,100,200]};
 function pips(v, th){ let n = 0; for(const t of th) if(v >= t) n++; return '<span class="pips">' + [0,1,2,3,4].map(i=>`<i class="${i<n?'on':''}"></i>`).join('') + '</span>'; }
-function showInfo(type){
-  const el = $('info');
-  if(!type){ el.innerHTML = '<h4>Pick a troop</h4><p>Click a troop card to select it. Hover a card to see its stats.</p>'; return; }
-  if(type==='erase'){ el.innerHTML = '<h4>Remove tool</h4><p>Click or drag over troops to take them back. Your gold is refunded.</p>'; return; }
-  const d = U[type], per = Math.max(0.5, d.cd||1);
+function unitTip(type){
+  const d = U[type], L = LORE[type] || ['', d.desc, '', ''], per = Math.max(0.5, d.cd||1);
   const dps = d.heal ? d.heal/per : d.bomb ? d.dmg : d.dmg*(d.chain?2.5:1)*(d.splash?2:1)*(d.cleave?1.5:1)/per;
-  el.innerHTML = `<h4><span></span><span class="c">${mode==='sandbox'?'':d.cost+' gold'}</span></h4><p></p>
-    <div class="bars"><span>Health</span>${pips(d.hp, PIPS.hp)}<span>${d.heal?'Healing':'Damage'}</span>${pips(dps, PIPS.dmg)}<span>Speed</span>${pips(d.spd, PIPS.spd)}<span>Range</span>${pips(d.range, PIPS.range)}</div>`;
-  el.querySelector('h4 span').textContent = d.name; el.querySelector('p').textContent = d.desc;
+  const idx = [...$('cards').querySelectorAll('.card[data-type]')].findIndex(c=>c.dataset.type===type);
+  return `<div class="th"><span data-icon></span><div><div class="tn">${d.name}</div><div class="tr">${L[0]}</div></div>${mode==='campaign' ? `<span class="tc">${d.cost}g</span>` : ''}</div>
+    <p>${L[1]}</p>
+    <div class="sw"><b class="g">GOOD VS</b><span>${L[2]}</span><b class="r">BAD VS</b><span>${L[3]}</span></div>
+    <div class="bars"><span>Health</span>${pips(d.hp, PIPS.hp)}<span>${d.heal?'Healing':'Damage'}</span>${pips(dps, PIPS.dmg)}<span>Speed</span>${pips(d.spd, PIPS.spd)}<span>Range</span>${pips(d.range, PIPS.range)}</div>
+    ${idx>=0 && idx<9 ? `<div class="tk">Hotkey ${idx+1}</div>` : ''}`;
 }
 function updateStats(){
   const el = $('hudStats');
@@ -1214,7 +1249,7 @@ function placeAt(p, erase){
   }
   if(!canPlaceAt(p.x, p.y)){
     const inZone = team===0 ? s.gx < ZONE_P : s.gx > ZONE_E;
-    if(!inZone) deny(team===0 ? 'Troops go in the blue zone on the left.' : 'Purple troops go in the purple zone on the right.');
+    if(!inZone) deny(mode==='sandbox' ? 'Place troops in the blue zone (left) or the purple zone (right).' : 'Troops go in the blue zone on the left.');
     else if(mode==='campaign' && U[tool].cost > gold) deny(`Not enough gold. ${U[tool].name} costs ${U[tool].cost}.`);
     return;
   }
@@ -1250,10 +1285,12 @@ cv.addEventListener('pointerdown', e=>{
     return;
   }
   painting = true; eraseDrag = e.button===2 || e.shiftKey;
-  placeAt(toField(e), eraseDrag);
+  const fp = toField(e); if(mode==='sandbox') team = fp.x >= W/2 ? 1 : 0;
+  placeAt(fp, eraseDrag);
 });
 cv.addEventListener('pointermove', e=>{
   hover = snap(toField(e));
+  if(mode==='sandbox' && !painting) team = hover.x >= W/2 ? 1 : 0;
   if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   if(mmDrag){ const m = inMinimap(e); if(m) centerOn(m.x, m.y); return; }
   if(pinch && ptrs.size===2){ const [a,b] = [...ptrs.values()], d = Math.hypot(a.x-b.x, a.y-b.y)||1, r = cv.getBoundingClientRect();
@@ -1266,11 +1303,28 @@ cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', e
 cv.addEventListener('pointerleave', ()=>{ hover = null; });
 cv.addEventListener('wheel', e=>{ if(!S || mode==='title') return; e.preventDefault(); const {fx, fy} = viewFrac(e); zoomAt(Math.pow(1.0015, -e.deltaY), fx, fy); }, {passive:false});
 
+// Themed tooltips for troop cards and anything with data-tip
+const tipEl = $('tip'); let tipFor = null, tipTimer = 0;
+function showTip(el){
+  const type = el.dataset.type;
+  if(type){ tipEl.className = ''; tipEl.innerHTML = unitTip(type); tipEl.querySelector('[data-icon]').replaceWith(iconCanvas(type, HORDE_ORDER.includes(type) ? 1 : 0)); }
+  else { tipEl.className = 'small'; tipEl.textContent = el.dataset.tip; }
+  tipEl.hidden = false; tipFor = el;
+  const r = el.getBoundingClientRect(), tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+  let x = clamp(r.left + r.width/2 - tw/2, 8, innerWidth - tw - 8), y = r.top - th - 10;
+  if(y < 8) y = r.bottom + 10;
+  tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+}
+function hideTip(){ tipEl.hidden = true; tipFor = null; clearTimeout(tipTimer); }
+const tipTarget = t => t && t.closest && t.closest('.card[data-type], [data-tip]');
+document.addEventListener('pointerover', e=>{ if(e.pointerType==='touch') return; const el = tipTarget(e.target); if(el && el!==tipFor){ clearTimeout(tipTimer); tipTimer = setTimeout(()=>showTip(el), el.dataset.type ? 120 : 350); } else if(!el) hideTip(); });
+document.addEventListener('pointerout', e=>{ const el = tipTarget(e.target); if(el && !el.contains(e.relatedTarget)) hideTip(); });
+document.addEventListener('focusin', e=>{ const el = tipTarget(e.target); if(el && e.target.matches(':focus-visible')) showTip(el); });
+document.addEventListener('focusout', hideTip);
+document.addEventListener('pointerdown', e=>{ const el = tipTarget(e.target); hideTip(); if(el && el.dataset.type && e.pointerType==='touch'){ showTip(el); tipTimer = setTimeout(hideTip, 2600); } }, true);
+
 $('btnErase').onclick = ()=>selectTool(tool==='erase' ? null : 'erase');
 $('btnUndo').onclick = undo;
-$('teamPick').onclick = e=>{ const b = e.target.closest('button'); if(!b) return; team = +b.dataset.team;
-  for(const x of $('teamPick').children) x.classList.toggle('on', x===b);
-  for(const c of $('cards').children){ if(!c.dataset.type) continue; c.replaceChild(iconCanvas(c.dataset.type, team), c.querySelector('canvas')); } };
 $('btnClear').onclick = ()=>{
   if(mode==='campaign'){ S.units = S.units.filter(u=>u.team!==0); gold = budget; } else S.units = [];
   placed = []; refreshTray();
@@ -1310,7 +1364,7 @@ function showResult(w){
   const btn = (label, cls, fn)=>{ const b = document.createElement('button'); b.className = 'btn '+cls; b.textContent = label; b.onclick = fn; rB.appendChild(b); return b; };
   if(mode==='sandbox'){
     ui('win');
-    rT.textContent = w===0 ? 'Blue wins' : w===1 ? 'Purple wins' : 'Nobody wins'; rT.className = w===1 ? 'lose' : 'win'; rS.innerHTML = '';
+    rT.textContent = w===0 ? 'Blue wins' : w===1 ? 'Purple wins' : 'Nobody wins'; rT.className = 'win'; rT.style.color = w===0 ? 'var(--blue)' : w===1 ? 'var(--purple)' : ''; rS.innerHTML = '';
     $('rStats').innerHTML = `<span>Blue survivors</span><b>${alive} / ${S.start[0]}</b><span>Purple survivors</span><b>${aliveE} / ${S.start[1]}</b><span>Battle time</span><b>${Math.round(S.t)}s</b>`;
     btn('Rematch', 'gold', startSandbox); btn('Clear field', '', ()=>{ sandboxSetup = null; startSandbox(); }); btn('Menu', '', goTitle);
     rB.firstChild.focus();
@@ -1318,7 +1372,7 @@ function showResult(w){
   }
   const lv = LEVELS[levelIdx], win = w===0;
   ui(win ? 'win' : 'lose');
-  rT.textContent = win ? 'Victory!' : 'Defeat'; rT.className = win ? 'win' : 'lose';
+  rT.textContent = win ? 'Victory!' : 'Defeat'; rT.className = win ? 'win' : 'lose'; rT.style.color = '';
   let stars = 0;
   if(win){ const surv = alive/Math.max(1,S.start[0]); stars = surv >= 0.6 ? 3 : surv >= 0.3 ? 2 : 1; }
   rS.innerHTML = win ? [0,1,2].map(i=>`<span class="${i<stars?'':'off'}" style="animation-delay:${0.15+i*0.2}s">★</span>`).join('') : '';
