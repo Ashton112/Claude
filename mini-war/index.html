@@ -1247,8 +1247,8 @@ $('speedCtl').onclick = e=>{ const b = e.target.closest('button'); if(b) setSpee
 
 // ----- Placement -----
 // Campaign: you get the left third. Sandbox: each army gets almost half the field.
-function zoneL(){ return mode==='sandbox' ? 228 : ZONE_P; }
-function zoneR(){ return mode==='sandbox' ? 252 : ZONE_E; }
+function zoneL(){ return mode==='sandbox' ? W/2 : ZONE_P; }
+function zoneR(){ return mode==='sandbox' ? W/2 - 1 : ZONE_E; }
 function sideAt(x){ return mode==='sandbox' && x >= W/2 ? 1 : 0; }
 function inZoneFor(tm, gx){ return tm===0 ? gx < zoneL() : gx > zoneR(); }
 function snap(p){ return {x:p.x, y:p.y, gx:Math.floor(p.x/GRID)*GRID+GRID/2, gy:Math.floor(p.y/GRID)*GRID+GRID/2+3}; }
@@ -1514,8 +1514,7 @@ function present(){
     label(mode==='sandbox' ? 'BLUE SIDE' : 'YOUR SIDE', sx(zoneL()/2), Math.max(sy(0)+fs*1.4, off+fs), '#9bbcff');
     label(mode==='sandbox' ? 'PURPLE SIDE' : 'ENEMY ARMY', sx((zoneR()+W)/2), Math.max(sy(0)+fs*1.4, off+fs), mode==='sandbox' ? '#d8a0f5' : '#ff8a8a');
     const mine = S.units.some(u=>u.team===0);
-    if(!mine && tool && tool!=='erase' && team===0 && $('scDialog').hidden){ const b = Math.sin(performance.now()/180)*fs*0.3; label('PLACE TROOPS HERE', sx(zoneL()/2), sy(H/2)+b, '#f0b93b'); }
-    if(mode==='sandbox' && !S.units.some(u=>u.team===1) && S.units.some(u=>u.team===0) && tool && tool!=='erase'){ const b = Math.sin(performance.now()/180)*fs*0.3; label('NOW PLACE PURPLE HERE', sx((zoneR()+W)/2), sy(H/2)+b, '#d8a0f5'); }
+    if(mode==='campaign' && !mine && tool && tool!=='erase' && $('scDialog').hidden){ const b = Math.sin(performance.now()/180)*fs*0.3; label('PLACE TROOPS HERE', sx(zoneL()/2), sy(H/2)+b, '#f0b93b'); }
   }
   if(mode!=='title' && S.phase==='fight' && speed===0) label('PAUSED  ·  press P', dw/2, dh/2, '#f0b93b', fs*1.6);
   else if(mode!=='title' && S.phase==='fight' && speed<1) label('SLOW-MO ' + (speed===0.25 ? '¼' : '½') + 'x', dw/2, fs*1.4, '#9fd4ff');
