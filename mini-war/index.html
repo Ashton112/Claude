@@ -21,13 +21,13 @@ button{font:inherit;color:inherit}
 #app{position:fixed;inset:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;background:var(--soil)}
 
 /* HUD */
-#hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 16px;background:var(--panel);border-bottom:2px solid var(--line)}
+#hud{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 16px;background:var(--panel);border-bottom:2px solid var(--line)}
 #hudTitle{display:flex;flex-direction:column;min-width:0;flex:0 1 auto}
 #hudChapter{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-#hudLevel{font-family:var(--f-display);font-size:17px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hudLevel{font-family:var(--f-display);font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .steps{display:flex;gap:4px;list-style:none;margin:0 auto;padding:0;flex-wrap:wrap}
-.steps li{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:2px solid var(--line);font-size:13px;color:var(--dim);white-space:nowrap}
-.steps li b{display:inline-grid;place-items:center;width:20px;height:20px;background:var(--line);color:var(--ink);font-family:var(--f-display);font-size:12px}
+.steps li{display:flex;align-items:center;gap:6px;padding:2px 9px 2px 3px;border:2px solid var(--line);font-size:12px;color:var(--dim);white-space:nowrap}
+.steps li b{display:inline-grid;place-items:center;width:18px;height:18px;background:var(--line);color:var(--ink);font-family:var(--f-display);font-size:12px}
 .steps li.now{border-color:var(--gold);color:var(--ink);background:#3a2c12}
 .steps li.now b{background:var(--gold);color:#2a1b08}
 .steps li.done{color:var(--ok)}
@@ -58,9 +58,9 @@ button{font:inherit;color:inherit}
 .seg button.on{background:var(--gold);color:#2a1b08}
 
 /* Stage */
-#stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding:8px 16px;background:repeating-linear-gradient(45deg,#18130f 0 6px,#15110e 6px 12px)}
+#stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding:6px 8px;background:repeating-linear-gradient(45deg,#18130f 0 6px,#15110e 6px 12px)}
 .board{position:relative;line-height:0}
-#cv{display:block;border:2px solid var(--line);box-shadow:0 6px 0 #0009;touch-action:none;background:#000;cursor:crosshair}
+#cv{display:block;border:2px solid var(--line);touch-action:none;background:#000;cursor:crosshair}
 #cv.grab{cursor:grab}
 .zoomctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:4px;line-height:1;align-items:center}
 .zoomctl button{width:36px;height:36px;background:#000c;border:2px solid var(--line);font-family:var(--f-display);font-size:18px;cursor:pointer;color:var(--ink)}
@@ -86,11 +86,23 @@ button{font:inherit;color:inherit}
 .tb-army .b{color:var(--blue)} .tb-army .p{color:var(--purple)} .tb-army .vs{color:var(--dim)}
 .topbar .btn.fight{font-size:17px;padding:8px 22px}
 
+.rot{display:none;position:absolute;left:16px;right:16px;bottom:12px;text-align:center;font-family:var(--f-display);font-size:11px;color:var(--gold);line-height:1.4}
+@media (orientation:portrait) and (max-width:760px){ body.m-battle .rot{display:block} }
+
 /* Tray */
-#tray{display:flex;gap:12px;align-items:center;padding:8px 16px;background:var(--panel);border-top:2px solid var(--line);max-height:38vh}
+#tray{display:flex;gap:10px;align-items:center;padding:5px 16px 4px;background:var(--panel);border-top:2px solid var(--line)}
 .tray-l{display:flex;flex-direction:column;gap:6px;justify-content:center;flex:0 0 auto}
 .tray-label{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;line-height:1.2}
-#cards{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;flex:1;min-width:0;max-height:calc(38vh - 20px);overflow-y:auto;padding:5px 4px 4px}
+.cardwrap{flex:1;min-width:0;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:4px;row-gap:3px;align-items:center}
+#cards{grid-column:2;display:flex;flex-wrap:nowrap;gap:5px;overflow-x:auto;overflow-y:hidden;min-width:0;padding:4px 2px 2px;scrollbar-width:none;scroll-behavior:smooth}
+#cards::-webkit-scrollbar{display:none}
+.scr{width:22px;align-self:stretch;margin-top:4px;background:var(--panel-2);border:2px solid var(--line);color:var(--gold);font-size:11px;cursor:pointer;padding:0;display:grid;place-items:center;box-shadow:0 2px 0 #0008}
+.scr:hover:not(:disabled){border-color:var(--gold);background:#3a2c12}
+.scr:disabled{opacity:.25;cursor:default;color:var(--dim)}
+.strack{grid-column:2;height:6px;background:var(--soil);border:1px solid var(--line);position:relative;cursor:pointer}
+.strack i{position:absolute;top:0;bottom:0;background:var(--gold);box-shadow:inset 0 -2px 0 #b07a18;min-width:16px;cursor:grab}
+.strack i:active{cursor:grabbing}
+.cardwrap:not(.over) .scr,.cardwrap:not(.over) .strack{visibility:hidden}
 .grp-l{align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--f-display);font-size:10px;letter-spacing:.14em;padding:4px 3px;border:2px solid var(--line);background:var(--soil)}
 .grp-l.t0{color:var(--blue)} .grp-l.t1{color:var(--purple)}
 /* themed scrollbars */
@@ -118,11 +130,11 @@ button{font:inherit;color:inherit}
 #tip .pips i.on{background:var(--gold)}
 #tip .tk{margin-top:6px;font-size:11px;color:var(--dim)}
 #tip.small{max-width:220px;padding:5px 9px;font-size:12px}
-.card{flex:0 0 auto;width:70px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative;box-shadow:0 3px 0 #0008}
+.card{flex:0 0 auto;width:72px;display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 2px 3px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative;box-shadow:0 3px 0 #0008}
 .card{transition:transform .08s,border-color .08s}
 .card:hover{border-color:var(--ink);transform:translateY(-2px)}
 .card:active{transform:translateY(1px)}
-.card canvas{width:34px;height:34px;image-rendering:pixelated}
+.card canvas{width:30px;height:30px;image-rendering:pixelated}
 .card .nm{font-size:10.5px;letter-spacing:-.01em;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .card .cost{font-family:var(--f-display);font-size:11px;color:var(--gold)}
 .card .key{position:absolute;top:2px;left:4px;font-family:var(--f-display);font-size:9px;color:var(--dim)}
@@ -133,8 +145,8 @@ button{font:inherit;color:inherit}
 .card.locked canvas{filter:brightness(0)}
 #cards.pick .card:not(.locked){animation:nudge 1s steps(2) infinite}
 @keyframes nudge{50%{border-color:var(--gold)}}
-.tray-tools{display:flex;flex-direction:column;gap:5px;justify-content:center}
-.tray-tools .btn{font-size:11px;padding:4px 10px}
+.tray-tools{display:flex;flex-direction:column;gap:3px;justify-content:center}
+.tray-tools .btn{font-size:10px;padding:2px 10px;box-shadow:0 2px 0 #0008}
 
 /* Screens */
 .screen{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;overflow-y:auto;animation:fadein .25s}
@@ -206,11 +218,10 @@ body.m-map #hud, body.m-map #tray{display:none}
   .steps li:not(.now){display:none} .steps{margin:0}
   .btn{padding:5px 8px;font-size:12px} .btn.fight{padding:5px 12px;font-size:14px}
   .seg-l{display:none} .seg button{padding:4px 6px;min-width:28px;font-size:12px}
-  #tray{padding:6px 12px;flex-wrap:wrap;gap:6px} .tray-label{display:none} .tray-l{display:none}
-  #cards{flex:1 1 100%;max-height:24vh;gap:4px}
-  .card{width:58px;padding:3px 1px} .card canvas{width:28px;height:28px} .card .nm{font-size:9.5px} .card .key{display:none}
-  .grp-l{font-size:8px}
-  .tray-tools{flex-direction:row;width:100%;justify-content:flex-end}
+  #tray{padding:4px 8px;gap:6px} .tray-l{display:none}
+  .card{width:56px} .card canvas{width:26px;height:26px} .card .nm{font-size:9.5px} .card .key{display:none}
+  .grp-l{font-size:8px} .scr{width:18px}
+  .tray-tools .btn{padding:2px 6px;font-size:9px}
   .zoomctl button{width:30px;height:30px}
   .topbar{top:6px;gap:6px;padding:4px 4px 4px 8px} .tb-gold b{font-size:15px} .tb-of,.goldbar{display:none} .topbar .btn.fight{font-size:13px;padding:6px 12px}
 }
@@ -237,6 +248,7 @@ body.m-map #hud, body.m-map #tray{display:none}
         <button data-sp="2" data-tip="Double speed">2x</button>
       </div>
       <button id="btnField" class="btn" hidden>Field</button>
+      <button id="btnFull" class="btn icon" data-tip="Fullscreen (F)" aria-label="Fullscreen"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor"><path d="M1 1h5v2H3v3H1zM10 1h5v5h-2V3h-3zM1 10h2v3h3v2H1zM13 10h2v5h-5v-2h3z"/></svg></button>
       <button id="btnSound" class="btn icon" data-tip="Sound on/off (M)" aria-label="Sound on/off"></button>
     </div>
   </header>
@@ -256,6 +268,7 @@ body.m-map #hud, body.m-map #tray{display:none}
       </div>
       <div id="hint" hidden></div>
     </div>
+    <div class="rot" id="rotHint">&#8635; Turn your phone sideways for a bigger battlefield</div>
     <section id="scDialog" hidden>
       <div class="dbox" id="dbox" role="button" tabindex="0">
         <canvas id="dface" width="16" height="16"></canvas>
@@ -269,7 +282,12 @@ body.m-map #hud, body.m-map #tray{display:none}
     <div class="tray-l">
       <span class="tray-label">Your<br>troops</span>
     </div>
-    <div id="cards"></div>
+    <div class="cardwrap" id="cardwrap">
+      <button class="scr" id="scrL" aria-label="Scroll troops left">&#9664;</button>
+      <div id="cards"></div>
+      <button class="scr" id="scrR" aria-label="Scroll troops right">&#9654;</button>
+      <div class="strack" id="strack"><i id="sthumb"></i></div>
+    </div>
     <div class="tray-tools">
       <button id="btnUndo" class="btn" data-tip="Undo last troop (Z)">Undo</button>
       <button id="btnErase" class="btn" data-tip="Remove troops (R)">Remove</button>
@@ -366,7 +384,7 @@ const LORE = {
   troll:    ['Heavy \u00b7 Regenerates', 'Heals itself all the time and smashes whole squads with a log.', 'Crowds', 'Burst damage, Bombers'],
   warlord:  ['Boss', 'Grubnak himself. Enormous, regenerating and extremely loud.', 'Everything', 'Being surrounded'],
 };
-const SHORT = {shield:'Shield', gobarcher:'Gob Archer', wolf:'Wolf Rider', shaman:'Shaman', catapult:'Catapult', berserker:'Berserker'};
+const SHORT = {shield:'Shield', gobarcher:'Gob Archer', wolf:'Wolf Rider', skeleton:'Skeleton', shaman:'Shaman', catapult:'Catapult', berserker:'Berserker'};
 const PLAYER_ORDER = ['peasant','spear','archer','shield','berserker','knight','monk','catapult','bomber','giant','wizard'];
 const HORDE_ORDER = ['goblin','gobarcher','wolf','orc','skeleton','shaman','troll','warlord'];
 const UNLOCKS = {0:'spear',1:'archer',2:'shield',3:'berserker',4:'knight',5:'monk',7:'catapult',8:'bomber',10:'giant',12:'wizard'};
@@ -914,7 +932,7 @@ let dpr = 1, mm = null;
 function fit(){
   const st = $('stage'), cs = getComputedStyle(st);
   const aw = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
-  const ah = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 10;
+  const ah = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 4;
   const sc = Math.max(0.5, Math.min(aw/W, ah/H));
   const w = Math.floor(W*sc), h = Math.floor(H*sc);
   cv.style.width = w+'px'; cv.style.height = h+'px';
@@ -1159,7 +1177,7 @@ function buildTray(list, showLocked){
     if(next !== undefined){ const b = document.createElement('div'); b.className = 'card locked'; b.appendChild(iconCanvas(UNLOCKS[next], 0));
       b.insertAdjacentHTML('beforeend', `<span class="nm">Locked</span><span class="cost" style="color:var(--dim)">Win #${next+1}</span>`); b.dataset.tip = `A new troop unlocks when you win battle ${next+1}.`; wrap.appendChild(b); }
   }
-  refreshTray();
+  refreshTray(); cardsEl.scrollLeft = 0; requestAnimationFrame(updateScroller);
 }
 function selectTool(type){
   tool = type; ui('select'); refreshTray();
@@ -1212,7 +1230,7 @@ function updateSteps(){
 function placeUI(){
   const placing = S.phase==='place';
   $('topbar').hidden = !placing || mode==='title';
-  $('tray').style.visibility = placing ? 'visible' : 'hidden';
+  $('tray').hidden = !placing;
   $('btnBack').innerHTML = mode==='sandbox' ? '&larr; Menu' : '&larr; Map';
   updateSoundUI(); refreshTray();
 }
@@ -1302,6 +1320,34 @@ const endPtr = e=>{ ptrs.delete(e.pointerId); if(ptrs.size<2) pinch = null; pan 
 cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
 cv.addEventListener('pointerleave', ()=>{ hover = null; });
 cv.addEventListener('wheel', e=>{ if(!S || mode==='title') return; e.preventDefault(); const {fx, fy} = viewFrac(e); zoomAt(Math.pow(1.0015, -e.deltaY), fx, fy); }, {passive:false});
+
+// Custom pixel scroller for the troop row
+const cardsEl = $('cards');
+function updateScroller(){
+  const over = cardsEl.scrollWidth > cardsEl.clientWidth + 1;
+  $('cardwrap').classList.toggle('over', over);
+  if(!over) return;
+  const sw = cardsEl.scrollWidth, cw = cardsEl.clientWidth, sl = cardsEl.scrollLeft;
+  const th = $('sthumb'); th.style.width = (cw/sw*100) + '%'; th.style.left = (sl/sw*100) + '%';
+  $('scrL').disabled = sl <= 1; $('scrR').disabled = sl >= sw - cw - 1;
+}
+cardsEl.addEventListener('scroll', updateScroller);
+cardsEl.addEventListener('wheel', e=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX) && cardsEl.scrollWidth > cardsEl.clientWidth){ e.preventDefault(); cardsEl.scrollLeft += e.deltaY; } }, {passive:false});
+$('scrL').onclick = ()=>cardsEl.scrollBy({left:-cardsEl.clientWidth*0.8});
+$('scrR').onclick = ()=>cardsEl.scrollBy({left:cardsEl.clientWidth*0.8});
+let thumbDrag = null;
+$('sthumb').addEventListener('pointerdown', e=>{ e.stopPropagation(); e.target.setPointerCapture(e.pointerId); thumbDrag = {x:e.clientX, sl:cardsEl.scrollLeft}; cardsEl.style.scrollBehavior = 'auto'; });
+$('sthumb').addEventListener('pointermove', e=>{ if(!thumbDrag) return; const r = $('strack').getBoundingClientRect(); cardsEl.scrollLeft = thumbDrag.sl + (e.clientX-thumbDrag.x)/r.width*cardsEl.scrollWidth; });
+$('sthumb').addEventListener('pointerup', ()=>{ thumbDrag = null; cardsEl.style.scrollBehavior = ''; });
+$('strack').addEventListener('pointerdown', e=>{ if(e.target.id==='sthumb') return; const r = $('strack').getBoundingClientRect(); cardsEl.scrollLeft = (e.clientX-r.left)/r.width*cardsEl.scrollWidth - cardsEl.clientWidth/2; });
+if(window.ResizeObserver) new ResizeObserver(updateScroller).observe(cardsEl);
+
+// Fullscreen
+function toggleFull(){
+  try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(()=>setHint('Fullscreen is not available here.', 2500)); }
+  catch(e){ setHint('Fullscreen is not available here.', 2500); }
+}
+$('btnFull').onclick = toggleFull;
 
 // Themed tooltips for troop cards and anything with data-tip
 const tipEl = $('tip'); let tipFor = null, tipTimer = 0;
@@ -1409,6 +1455,7 @@ function defeatTip(lv){
 // ----- Keyboard -----
 addEventListener('keydown', e=>{
   if(e.key==='m' || e.key==='M'){ toggleSound(); return; }
+  if(e.key==='f' || e.key==='F'){ toggleFull(); return; }
   if(mode==='title' || mode==='map') return;
   if(!$('scDialog').hidden){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nextLine(); } return; }
   if(!$('scResult').hidden) return;
