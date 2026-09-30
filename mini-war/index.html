@@ -332,6 +332,7 @@ body.m-map #hud, body.m-map #tray{display:none}
 (function(){
 'use strict';
 const HEADLESS = !!(typeof window !== 'undefined' && window.__MW_HEADLESS);
+const MAX_UNITS = 2500;
 const W = 480, H = 270, ZONE_P = 150, ZONE_E = 330, GRID = 6, GRAV = 240, STEP = 1/60, MAXP = 4000, TIME_LIMIT = 180;
 
 // ---------- Data ----------
@@ -480,7 +481,7 @@ function newBattle(theme){
 }
 function spawn(type, team, x, y){
   const d = U[type];
-  const u = {id:uid++, type, d, team, x, y, z:0, vz:0, kx:0, ky:0, mvx:0, mvy:0, hp:d.hp, cd:Math.random()*d.cd*0.5, rt:0, target:null,
+  const u = {id:uid++, type, d, team, x, y, z:0, vz:0, kx:0, ky:0, mvx:0, mvy:0, hp:d.hp, cd:Math.random()*d.cd*0.5, rt:Math.random()*0.4, target:null,
     face: team===0?1:-1, walk:Math.random()*4, atk:0, flash:0, stun:0, run:0, moving:false, dead:false, hop:Math.random()*2, hpShow:d.hp, lunge:0};
   S.units.push(u); return u;
 }
@@ -496,9 +497,25 @@ function spawnBlocks(blocks, team){
 
 // ---------- Simulation ----------
 let sfx = ()=>{}; // replaced by the audio engine in the browser
+// Spatial grid so thousands of troops only check their neighbours
+const CELL = 20, GW = Math.ceil(W/CELL)+1, GH = Math.ceil(H/CELL)+1;
+const gridAll = [], gridT = [[], []];
+for(let i=0;i<GW*GH;i++){ gridAll.push([]); gridT[0].push([]); gridT[1].push([]); }
+const cellX = x => clamp(Math.floor(x/CELL), 0, GW-1), cellY = y => clamp(Math.floor(y/CELL), 0, GH-1);
+function buildGrid(){
+  for(let i=0;i<GW*GH;i++){ gridAll[i].length = 0; gridT[0][i].length = 0; gridT[1][i].length = 0; }
+  for(const u of S.units){ if(u.dead) continue; const i = cellY(u.y)*GW + cellX(u.x); gridAll[i].push(u); gridT[u.team][i].push(u); }
+}
 function nearestEnemy(u){
+  const g = gridT[1-u.team], cx = cellX(u.x), cy = cellY(u.y), maxR = Math.max(GW, GH);
   let best = null, bd = 1e12;
-  for(const e of S.units){ if(e.dead || e.team===u.team) continue; const dx=e.x-u.x, dy=e.y-u.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=e;} }
+  for(let r=0; r<maxR; r++){
+    if(best && (r-1)*CELL > Math.sqrt(bd)) break;
+    for(let y=cy-r; y<=cy+r; y++){ if(y<0 || y>=GH) continue;
+      const edge = (y===cy-r || y===cy+r);
+      for(let x=cx-r; x<=cx+r; x += edge ? 1 : 2*r || 1){ if(x<0 || x>=GW) continue;
+        for(const e of g[y*GW+x]){ if(e.dead) continue; const dx=e.x-u.x, dy=e.y-u.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=e;} } } }
+  }
   return best;
 }
 function moveBy(u, dx, dy, dist, spd, dt){
@@ -531,15 +548,20 @@ function think(u, dt){
 }
 function monkThink(u, dt){
   const d = u.d;
-  let foe = nearestEnemy(u), fd = foe ? Math.hypot(foe.x-u.x, foe.y-u.y) : 1e9;
-  let best = null, bs = 1, near = null, nd = 1e9;
-  for(const a of S.units){
-    if(a.dead || a.team!==u.team || a===u) continue;
-    const dd = Math.hypot(a.x-u.x, a.y-u.y);
-    if(!a.d.support && dd<nd){ nd=dd; near=a; }
-    const ratio = a.hp/a.d.hp;
-    if(ratio<0.98 && dd<110 && ratio<bs){ bs=ratio; best=a; }
+  u.mt = (u.mt||0) - dt;
+  if(u.mt <= 0 || (u.foe && u.foe.dead) || (u.mBest && (u.mBest.dead || u.mBest.hp >= u.mBest.d.hp)) || (u.mNear && u.mNear.dead)){
+    u.mt = rnd(0.25, 0.4); u.foe = nearestEnemy(u);
+    let best = null, bs = 1, near = null, nd = 1e9;
+    for(const a of S.units){
+      if(a.dead || a.team!==u.team || a===u) continue;
+      const dd = Math.hypot(a.x-u.x, a.y-u.y);
+      if(!a.d.support && dd<nd){ nd=dd; near=a; }
+      const ratio = a.hp/a.d.hp;
+      if(ratio<0.98 && dd<110 && ratio<bs){ bs=ratio; best=a; }
+    }
+    u.mBest = best; u.mNear = near;
   }
+  const foe = u.foe, fd = foe ? Math.hypot(foe.x-u.x, foe.y-u.y) : 1e9, best = u.mBest, near = u.mNear, nd = near ? Math.hypot(near.x-u.x, near.y-u.y) : 1e9;
   if(foe && fd < 16){ moveBy(u, u.x-foe.x, u.y-foe.y, fd, d.spd, dt); return; }
   if(best){
     const dx=best.x-u.x, dy=best.y-u.y, dist=Math.hypot(dx,dy)||0.001; u.face = dx>=0?1:-1;
@@ -669,14 +691,17 @@ function part(x,y,z,vx,vy,vz,c,s,life,stick,g){
 function step(dt){
   S.t += dt;
   const us = S.units;
+  buildGrid();
   for(const u of us) if(!u.dead) think(u, dt);
-  // separation
-  for(let i=0;i<us.length;i++){ const a = us[i]; if(a.dead) continue;
-    for(let j=i+1;j<us.length;j++){ const b = us[j]; if(b.dead) continue;
-      const dx=b.x-a.x, dy=b.y-a.y, rr=a.d.r+b.d.r; if(dx>rr||dx<-rr||dy>rr||dy<-rr) continue;
-      const d2 = dx*dx+dy*dy; if(d2 >= rr*rr) continue;
-      const d = Math.sqrt(d2)||0.01, over = (rr-d)*0.5, nx=dx/d, ny=dy/d, ma=a.d.mass||1, mb=b.d.mass||1, tot=ma+mb;
-      a.x -= nx*over*mb/tot; a.y -= ny*over*mb/tot; b.x += nx*over*ma/tot; b.y += ny*over*ma/tot; } }
+  // separation (neighbouring grid cells only)
+  buildGrid();
+  for(const a of us){ if(a.dead) continue; const cx = cellX(a.x), cy = cellY(a.y);
+    for(let y=Math.max(0,cy-1); y<=Math.min(GH-1,cy+1); y++) for(let x=Math.max(0,cx-1); x<=Math.min(GW-1,cx+1); x++){
+      for(const b of gridAll[y*GW+x]){ if(b.id <= a.id || b.dead) continue;
+        const dx=b.x-a.x, dy=b.y-a.y, rr=a.d.r+b.d.r; if(dx>rr||dx<-rr||dy>rr||dy<-rr) continue;
+        const d2 = dx*dx+dy*dy; if(d2 >= rr*rr) continue;
+        const d = Math.sqrt(d2)||0.01, over = (rr-d)*0.5, nx=dx/d, ny=dy/d, ma=a.d.mass||1, mb=b.d.mass||1, tot=ma+mb;
+        a.x -= nx*over*mb/tot; a.y -= ny*over*mb/tot; b.x += nx*over*ma/tot; b.y += ny*over*ma/tot; } } }
   for(const u of us){ u.x = clamp(u.x, 3, W-3); u.y = clamp(u.y, 8, H-3); }
   // projectiles
   for(let i=S.projs.length-1;i>=0;i--){ const p = S.projs[i];
@@ -684,8 +709,9 @@ function step(dt){
     if(p.k==='fire') part(p.x, p.y, p.z, rnd(-5,5), rnd(-5,5), rnd(0,10), pick(['#ffb030','#ff6a20']), 1, 0.25, false, 0);
     let done = false;
     if(p.k==='arrow' && p.z < 12){
-      for(const e of us){ if(e.dead || e.team===p.team) continue; const rr = e.d.r+1.5;
-        if(Math.abs(e.x-p.x)<rr && Math.abs(e.y-p.y)<rr && p.z < 10*(e.d.scale||1)+e.z){ hurt(e, p.dmg*rnd(0.85,1.15), p.x-p.vx*0.1, p.y-p.vy*0.1, 8, true); done = true; break; } }
+      const g = gridT[1-p.team], cx = cellX(p.x), cy = cellY(p.y);
+      outer: for(let y=Math.max(0,cy-1); y<=Math.min(GH-1,cy+1); y++) for(let x=Math.max(0,cx-1); x<=Math.min(GW-1,cx+1); x++) for(const e of g[y*GW+x]){ if(e.dead) continue; const rr = e.d.r+1.5;
+        if(Math.abs(e.x-p.x)<rr && Math.abs(e.y-p.y)<rr && p.z < 10*(e.d.scale||1)+e.z){ hurt(e, p.dmg*rnd(0.85,1.15), p.x-p.vx*0.1, p.y-p.vy*0.1, 8, true); done = true; break outer; } }
     }
     if(!done && p.z <= 0){
       if(p.k==='arrow') stampArrow(p); else explode(p.x, p.y, p.splash, p.dmg, p.team, p.k==='rock'?0.3:0, false);
@@ -1214,7 +1240,7 @@ function updateStats(){
       const n = $('tbGoldN'), prev = +n.dataset.v;
       if(prev !== gold){ n.dataset.v = gold; n.textContent = gold; n.classList.remove('bump','up'); void n.offsetWidth; n.classList.add(gold < prev ? 'bump' : 'up'); }
       $('tbGoldMax').textContent = '/ ' + budget; $('tbGoldBar').style.width = (gold/budget*100).toFixed(1) + '%';
-    } else $('tbArmy').innerHTML = `<span class="b">${a} Blue</span><span class="vs">vs</span><span class="p">${b} Purple</span>`;
+    } else $('tbArmy').innerHTML = `<span class="b">${a} Blue</span><span class="vs">vs</span><span class="p">${b} Purple</span>${a+b > MAX_UNITS*0.8 ? `<span class="vs">(${a+b}/${MAX_UNITS})</span>` : ''}`;
   } else el.innerHTML = `<span class="b">${a}</span><span style="color:var(--dim)">vs</span><span class="p">${b}</span>`;
 }
 function updateSteps(){
@@ -1257,7 +1283,7 @@ function canPlaceAt(x, y){
   const s = snap({x,y}), d = U[tool];
   if(!inZoneFor(sideAt(s.gx), s.gx) || s.gy < 12 || s.gy > H-3) return false;
   if(mode==='campaign' && d.cost > gold) return false;
-  if(mode==='sandbox' && S.units.length >= 600) return false;
+  if(mode==='sandbox' && S.units.length >= MAX_UNITS) return false;
   for(const u of S.units){ const need = Math.max(GRID*0.9, (u.d.r + d.r)*0.85); if(Math.abs(u.x-s.gx) < need && Math.abs(u.y-s.gy) < need) return false; }
   return true;
 }
@@ -1275,6 +1301,7 @@ function placeAt(p, erase){
   if(!canPlaceAt(p.x, p.y)){
     if(!inZoneFor(tm, s.gx)){ S.fx.push({k:'nope', x:s.gx, y:s.gy-3, life:0.5, max:0.5}); deny(mode==='sandbox' ? 'Too close to the middle. Place troops in the blue (left) or purple (right) area.' : 'Troops go in the blue zone on the left.'); }
     else if(mode==='campaign' && U[tool].cost > gold) deny(`Not enough gold. ${U[tool].name} costs ${U[tool].cost}.`);
+    else if(mode==='sandbox' && S.units.length >= MAX_UNITS) deny(`Troop limit reached (${MAX_UNITS}). Remove some to place more.`);
     return;
   }
   const nu = spawn(tool, tm, s.gx, s.gy); nu.z = 14; nu.vz = -40; placed.push(nu); ui('place');
@@ -1547,7 +1574,7 @@ function frame(now){
     if(S.banner){ S.banner.t += dt; if(S.banner.t > 1.5) S.banner = null; }
     const slow = S.endSlow > 0 && mode!=='title' ? 0.3 : 1; if(S.endSlow > 0) S.endSlow -= dt;
     if(S.phase==='place'){ acc = 0; settle(dt); }
-    else { acc += dt*(mode==='title' ? 1 : speed)*slow; let n = 0; while(acc >= STEP && n < 8){ step(STEP); acc -= STEP; n++; } if(n===8) acc = 0; updateStatsThrottled(); }
+    else { acc += dt*(mode==='title' ? 1 : speed)*slow; let n = 0; const maxN = S.units.length > 800 ? 3 : 8; while(acc >= STEP && n < maxN){ step(STEP); acc -= STEP; n++; } if(n===maxN) acc = 0; updateStatsThrottled(); }
     render(); present();
   }
   requestAnimationFrame(frame);
