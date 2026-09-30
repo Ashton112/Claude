@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap">
 <style>
-/* Layout: arcade cabinet. HUD strip on top, 16:9 pixel battlefield in the middle, troop tray below. */
+/* Layout: arcade cabinet. HUD strip with the 3 steps on top, zoomable pixel battlefield in the middle, troop tray below. */
 :root{
   --soil:#15110e; --panel:#231b16; --panel-2:#30251d; --line:#4b3b2f;
   --ink:#f3e7cf; --dim:#b3a086; --gold:#f0b93b; --blood:#d0303f;
@@ -19,40 +19,91 @@ html,body{height:100%;margin:0;background:var(--soil);color:var(--ink);font-fami
 [hidden]{display:none!important}
 button{font:inherit;color:inherit}
 #app{position:fixed;inset:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;background:var(--soil)}
+
+/* HUD */
 #hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 16px;background:var(--panel);border-bottom:2px solid var(--line)}
-#hudTitle{display:flex;flex-direction:column;min-width:0;flex:1}
+#hudTitle{display:flex;flex-direction:column;min-width:0;flex:0 1 auto}
 #hudChapter{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 #hudLevel{font-family:var(--f-display);font-size:17px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#hudStats{font-family:var(--f-display);font-size:14px;font-variant-numeric:tabular-nums;display:flex;gap:12px}
+.steps{display:flex;gap:4px;list-style:none;margin:0 auto;padding:0;flex-wrap:wrap}
+.steps li{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:2px solid var(--line);font-size:13px;color:var(--dim);white-space:nowrap}
+.steps li b{display:inline-grid;place-items:center;width:20px;height:20px;background:var(--line);color:var(--ink);font-family:var(--f-display);font-size:12px}
+.steps li.now{border-color:var(--gold);color:var(--ink);background:#3a2c12}
+.steps li.now b{background:var(--gold);color:#2a1b08}
+.steps li.done{color:var(--ok)}
+.steps li.done b{background:var(--ok);color:#10200a}
+#hudStats{font-family:var(--f-display);font-size:14px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px}
 #hudStats .g{color:var(--gold)} #hudStats .b{color:var(--blue)} #hudStats .p{color:var(--purple)}
-.hud-actions{display:flex;gap:6px;flex-wrap:wrap}
+#hudStats .gl{font-size:11px;color:var(--dim);letter-spacing:.1em}
+.goldbar{display:block;width:70px;height:8px;background:#3a2e25;border:1px solid var(--line)}
+.goldbar i{display:block;height:100%;background:var(--gold)}
+.hud-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-left:auto}
 .btn{background:var(--panel-2);border:2px solid var(--line);padding:6px 12px;cursor:pointer;font-family:var(--f-display);font-size:13px;box-shadow:0 3px 0 #0008;transition:transform .05s}
-.btn:hover{border-color:var(--dim)}
-.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0008}
-.btn:focus-visible,.card:focus-visible,.lvl:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.btn.fight{background:var(--blood);border-color:#ff6070;color:#fff;font-size:15px;padding:6px 18px}
+.btn:hover:not(:disabled){border-color:var(--ink)}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #0008}
+.btn:focus-visible,.card:focus-visible,.lvl:focus-visible,.seg button:focus-visible,.zoomctl button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn.sel{border-color:var(--blood);background:#4a1c22}
+.btn.icon{padding:5px 8px;display:inline-grid;place-items:center}
+.btn.icon svg{width:18px;height:18px;display:block}
+.btn.fight{background:var(--blood);border-color:#ff6070;color:#fff;font-size:16px;padding:7px 20px}
+.btn.fight:not(.ready){filter:grayscale(.8);opacity:.65}
+.btn.fight.ready{animation:glow 1s steps(2) infinite}
+@keyframes glow{50%{box-shadow:0 3px 0 #0008,0 0 0 4px #f0b93baa}}
 .btn.gold{background:var(--gold);border-color:#ffe08a;color:#2a1b08}
 .btn:disabled{opacity:.4;cursor:default}
+.seg{display:flex;align-items:stretch;border:2px solid var(--line);background:var(--panel-2);box-shadow:0 3px 0 #0008}
+.seg-l{font-size:11px;padding:0 8px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;display:grid;place-items:center}
+.seg button{background:none;border:0;border-left:2px solid var(--line);padding:5px 9px;cursor:pointer;font-family:var(--f-display);font-size:13px;min-width:34px}
+.seg button:hover{background:#3d3026}
+.seg button.on{background:var(--gold);color:#2a1b08}
+
+/* Stage */
 #stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;padding:8px 16px;background:repeating-linear-gradient(45deg,#18130f 0 6px,#15110e 6px 12px)}
-#cv{image-rendering:pixelated;image-rendering:crisp-edges;display:block;border:2px solid var(--line);box-shadow:0 6px 0 #0009;touch-action:none;background:#000;cursor:crosshair}
-#hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:calc(100% - 48px);background:#000c;border:1px solid var(--line);padding:5px 10px;font-size:13px;color:var(--ink);pointer-events:none;text-align:center}
-#tray{display:flex;gap:10px;align-items:stretch;padding:8px 16px;background:var(--panel);border-top:2px solid var(--line);min-height:84px}
-#cards{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding-bottom:4px}
-.card{flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative}
+.board{position:relative;line-height:0}
+#cv{display:block;border:2px solid var(--line);box-shadow:0 6px 0 #0009;touch-action:none;background:#000;cursor:crosshair}
+#cv.grab{cursor:grab}
+.zoomctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:4px;line-height:1;align-items:center}
+.zoomctl button{width:36px;height:36px;background:#000c;border:2px solid var(--line);font-family:var(--f-display);font-size:18px;cursor:pointer;color:var(--ink)}
+.zoomctl button:hover:not(:disabled){border-color:var(--gold)}
+.zoomctl button:disabled{opacity:.35;cursor:default}
+.zoomctl #zFit{font-size:10px}
+.zoomctl .zl{font-family:var(--f-display);font-size:11px;background:#000c;padding:2px 4px;color:var(--gold)}
+#hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);max-width:calc(100% - 120px);background:#000d;border:2px solid var(--gold);padding:6px 12px;font-size:14px;line-height:1.3;color:var(--ink);pointer-events:none;text-align:center}
+
+/* Tray */
+#tray{display:flex;gap:10px;align-items:stretch;padding:8px 16px;background:var(--panel);border-top:2px solid var(--line);min-height:92px}
+.tray-l{display:flex;flex-direction:column;gap:6px;justify-content:center;flex:0 0 auto}
+.tray-label{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;line-height:1.2}
+#cards{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding:4px 2px 4px}
+.card{flex:0 0 auto;width:76px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:var(--panel-2);border:2px solid var(--line);cursor:pointer;position:relative;box-shadow:0 3px 0 #0008}
+.card:hover{border-color:var(--ink)}
 .card canvas{width:40px;height:40px;image-rendering:pixelated}
 .card .nm{font-size:11px;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .card .cost{font-family:var(--f-display);font-size:11px;color:var(--gold)}
-.card.sel{border-color:var(--gold);background:#4a3a1c}
+.card .key{position:absolute;top:2px;left:4px;font-family:var(--f-display);font-size:9px;color:var(--dim)}
+.card.sel{border-color:var(--gold);background:#4a3a1c;transform:translateY(-3px);box-shadow:0 3px 0 var(--gold)}
+.card.sel::after{content:"SELECTED";position:absolute;top:-2px;right:-2px;background:var(--gold);color:#2a1b08;font-family:var(--f-display);font-size:8px;padding:1px 3px}
 .card.poor{opacity:.45}
-.card.locked{cursor:default;opacity:.5}
+.card.locked{cursor:default;opacity:.5;box-shadow:none}
 .card.locked canvas{filter:brightness(0)}
-.card.tool{width:64px;justify-content:center;font-family:var(--f-display);font-size:11px}
-.card.tool .x{font-size:22px;color:var(--blood);line-height:1}
+#cards.pick .card:not(.locked){animation:nudge 1s steps(2) infinite}
+@keyframes nudge{50%{border-color:var(--gold)}}
+.tray-tools{display:flex;flex-direction:column;gap:5px;justify-content:center}
+.tray-tools .btn{font-size:11px;padding:4px 10px}
 .teampick{display:flex;flex-direction:column;gap:4px}
 .teampick .btn{padding:4px 8px;font-size:11px}
 .teampick .btn.on.t0{background:var(--blue);border-color:#9bbcff;color:#fff}
 .teampick .btn.on.t1{background:var(--purple);border-color:#d8a0f5;color:#fff}
+.info{width:230px;flex:0 0 auto;background:var(--panel-2);border:2px solid var(--line);padding:6px 10px;font-size:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.info h4{margin:0;font-family:var(--f-display);font-size:13px;font-weight:400;display:flex;justify-content:space-between;gap:8px}
+.info h4 .c{color:var(--gold)}
+.info p{margin:0;color:var(--dim);line-height:1.3}
+.bars{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;font-size:11px}
+.pips{display:flex;gap:2px}
+.pips i{width:12px;height:6px;background:#3a2e25}
+.pips i.on{background:var(--gold)}
 
+/* Screens */
 .screen{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;overflow-y:auto}
 #scTitle{background:linear-gradient(#15110ecc,#15110e55 40%,#15110ecc);align-items:center;justify-content:center;gap:22px;padding:24px 16px;text-align:center}
 .logo{font-family:var(--f-display);font-weight:700;font-size:clamp(46px,11vw,96px);line-height:.9;letter-spacing:.02em;color:var(--ink);text-shadow:4px 4px 0 var(--blood),8px 8px 0 #000}
@@ -60,12 +111,13 @@ button{font:inherit;color:inherit}
 .tag{font-size:16px;color:var(--dim);margin-top:-8px}
 .menu{display:flex;flex-direction:column;gap:10px;width:min(260px,100%)}
 .menu .btn{font-size:16px;padding:10px}
-.confirm{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px}
+.confirm{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px;flex-wrap:wrap}
 .foot{font-size:12px;color:var(--dim)}
 
 #scMap{background:var(--soil);padding-block:20px 32px;padding-inline:16px}
-.maphead{display:flex;align-items:center;gap:14px;max-width:1000px;width:100%;margin:0 auto 18px}
+.maphead{display:flex;align-items:center;gap:14px;max-width:1000px;width:100%;margin:0 auto 18px;flex-wrap:wrap}
 .maphead h2{font-family:var(--f-display);font-size:26px;margin:0;flex:1}
+.maphint{max-width:1000px;width:100%;margin:-8px auto 14px;font-size:14px;color:var(--dim)}
 .chapters{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:1000px;width:100%;margin:0 auto}
 .chap{background:var(--panel);border:2px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .chap.locked{opacity:.45}
@@ -79,15 +131,17 @@ button{font:inherit;color:inherit}
 .lvl .no{font-family:var(--f-display);font-size:12px;color:var(--dim);width:22px}
 .lvl .ln{flex:1;font-size:14px;min-width:0}
 .lvl .st{font-size:13px;color:var(--gold);letter-spacing:1px;white-space:nowrap}
-.lvl.next{border-color:var(--gold);animation:pulse 1.2s steps(2) infinite}
+.lvl.next{border-color:var(--gold);background:#3a2c12;animation:pulse 1.2s steps(2) infinite}
+.lvl.next .st{background:var(--gold);color:#2a1b08;padding:1px 5px;font-family:var(--f-display);font-size:11px}
 @keyframes pulse{50%{border-color:var(--line)}}
 
 #scDialog{position:absolute;left:0;right:0;bottom:0;z-index:12;padding:0 16px 16px;display:flex;justify-content:center;pointer-events:none}
-.dbox{pointer-events:auto;width:min(720px,100%);background:#120e0bf2;border:2px solid var(--line);box-shadow:0 6px 0 #000a;padding:12px 16px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start}
+.dbox{pointer-events:auto;width:min(720px,100%);background:#120e0bf2;border:2px solid var(--gold);box-shadow:0 6px 0 #000a;padding:12px 16px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start;line-height:normal}
 .dbox canvas{grid-row:span 3;width:56px;height:56px;image-rendering:pixelated;background:var(--panel-2);border:2px solid var(--line)}
 .dname{font-family:var(--f-display);font-size:14px}
 .dtext{font-size:17px;line-height:1.35;min-height:2.7em}
-.dnext{justify-self:end;font-size:12px;color:var(--dim);font-family:var(--f-display)}
+.dnext{justify-self:end;font-size:12px;color:var(--gold);font-family:var(--f-display);animation:pulse2 .8s steps(2) infinite}
+@keyframes pulse2{50%{opacity:.4}}
 
 #scResult{background:#0009;align-items:center;justify-content:center;padding:24px 16px}
 .rbox{background:var(--panel);border:2px solid var(--line);box-shadow:0 8px 0 #000;padding:20px 22px;width:min(420px,100%);display:flex;flex-direction:column;gap:12px;text-align:center}
@@ -105,27 +159,55 @@ button{font:inherit;color:inherit}
 .unlock p{margin:2px 0 0;font-size:13px;color:var(--dim)}
 .rbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
-body.m-title #hud, body.m-title #tray, body.m-title #hint{display:none}
+body.m-title #hud, body.m-title #tray, body.m-title #hint, body.m-title .zoomctl{display:none}
 body.m-map #hud, body.m-map #tray{display:none}
-@media (max-width:600px){ #hudChapter{display:none} #hud{padding:6px 12px} #hudLevel{font-size:14px} .btn{padding:5px 8px;font-size:12px} .btn.fight{padding:5px 12px} #tray{padding:6px 12px} }
-@media (prefers-reduced-motion:reduce){ .lvl.next{animation:none} }
+@media (max-width:1100px){ .info{display:none} }
+@media (max-width:760px){
+  #hudChapter{display:none} #hud{padding:6px 12px} #hudLevel{font-size:14px}
+  .steps li:not(.now){display:none} .steps{margin:0}
+  .btn{padding:5px 8px;font-size:12px} .btn.fight{padding:5px 12px;font-size:14px}
+  .seg-l{display:none} .seg button{padding:4px 6px;min-width:28px;font-size:12px}
+  #tray{padding:6px 12px} .tray-label{display:none}
+  .zoomctl button{width:30px;height:30px}
+}
+@media (prefers-reduced-motion:reduce){ .lvl.next,.btn.fight.ready,#cards.pick .card,.dnext{animation:none} }
 </style>
 
 <div id="app">
   <header id="hud">
-    <button id="btnBack" class="btn">&larr; Back</button>
+    <button id="btnBack" class="btn">&larr; Map</button>
     <div id="hudTitle"><span id="hudChapter"></span><strong id="hudLevel"></strong></div>
+    <ol id="steps" class="steps">
+      <li><b>1</b><span>Pick a troop</span></li>
+      <li><b>2</b><span>Place in the blue zone</span></li>
+      <li><b>3</b><span>Press Fight!</span></li>
+    </ol>
     <div id="hudStats"></div>
     <div class="hud-actions">
+      <div id="speedCtl" class="seg" role="group" aria-label="Battle speed">
+        <span class="seg-l">Speed</span>
+        <button data-sp="0" title="Pause (P)">II</button>
+        <button data-sp="0.25" title="Quarter speed">&frac14;</button>
+        <button data-sp="0.5" title="Half speed">&frac12;</button>
+        <button data-sp="1" class="on" title="Normal speed">1x</button>
+        <button data-sp="2" title="Double speed">2x</button>
+      </div>
       <button id="btnField" class="btn" hidden>Field</button>
-      <button id="btnClear" class="btn">Clear</button>
-      <button id="btnSpeed" class="btn" hidden>1x</button>
-      <button id="btnFight" class="btn fight">Fight!</button>
+      <button id="btnSound" class="btn icon" title="Sound on/off (M)" aria-label="Sound on/off"></button>
+      <button id="btnFight" class="btn fight">Fight! &#9654;</button>
     </div>
   </header>
   <main id="stage">
-    <canvas id="cv" width="480" height="270" aria-label="Battlefield"></canvas>
-    <div id="hint" hidden></div>
+    <div class="board" id="board">
+      <canvas id="cv" width="480" height="270" aria-label="Battlefield"></canvas>
+      <div class="zoomctl">
+        <span class="zl" id="zLvl">1.0x</span>
+        <button id="zIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
+        <button id="zOut" title="Zoom out (-)" aria-label="Zoom out">&minus;</button>
+        <button id="zFit" title="Show whole field (0)">FIT</button>
+      </div>
+      <div id="hint" hidden></div>
+    </div>
     <section id="scDialog" hidden>
       <div class="dbox" id="dbox" role="button" tabindex="0">
         <canvas id="dface" width="16" height="16"></canvas>
@@ -136,21 +218,30 @@ body.m-map #hud, body.m-map #tray{display:none}
     </section>
   </main>
   <footer id="tray">
-    <div class="teampick" id="teamPick" hidden>
-      <button class="btn t0 on" data-team="0">Blue</button>
-      <button class="btn t1" data-team="1">Purple</button>
+    <div class="tray-l">
+      <span class="tray-label">Your<br>troops</span>
+      <div class="teampick" id="teamPick" hidden>
+        <button class="btn t0 on" data-team="0">Blue</button>
+        <button class="btn t1" data-team="1">Purple</button>
+      </div>
     </div>
     <div id="cards"></div>
-    <button id="btnErase" class="card tool" title="Remove troops (R)"><span class="x">&times;</span>Remove</button>
+    <div class="tray-tools">
+      <button id="btnUndo" class="btn" title="Undo last troop (Z)">Undo</button>
+      <button id="btnErase" class="btn" title="Remove troops (R)">Remove</button>
+      <button id="btnClear" class="btn" title="Remove all your troops">Clear all</button>
+    </div>
+    <div id="info" class="info"></div>
   </footer>
 
   <section id="scTitle" class="screen">
     <div class="logo">MINI<br><span>WAR</span></div>
     <div class="tag">Tiny troops. Big mess.</div>
     <div class="menu">
-      <button class="btn gold" id="btnCampaign">Campaign</button>
+      <button class="btn gold" id="btnCampaign">Campaign &#9654;</button>
       <button class="btn" id="btnSandbox">Sandbox</button>
       <button class="btn" id="btnGore">Blood: Normal</button>
+      <button class="btn" id="btnSoundT">Sound: On</button>
       <button class="btn" id="btnReset">Erase progress</button>
       <div class="confirm" id="resetConfirm" hidden>Erase all stars and unlocks?
         <button class="btn" id="resetYes">Erase</button><button class="btn" id="resetNo">Keep</button></div>
@@ -160,6 +251,7 @@ body.m-map #hud, body.m-map #tray{display:none}
 
   <section id="scMap" class="screen" hidden>
     <div class="maphead"><button class="btn" id="mapBack">&larr; Menu</button><h2>The War for Tinyvale</h2><div id="mapStars" class="foot"></div></div>
+    <div class="maphint">Click the glowing battle to play it. Win to unlock the next one and a new troop.</div>
     <div class="chapters" id="chapters"></div>
   </section>
 
@@ -285,7 +377,7 @@ const LEVELS = [
 
 // ---------- Save ----------
 const SAVE_KEY = 'miniwar.save.v1';
-let save = {beaten:0, stars:[], gore:1};
+let save = {beaten:0, stars:[], gore:1, sound:1};
 function loadSave(){ try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if(s && typeof s.beaten === 'number') save = Object.assign(save, s); }catch(e){} }
 function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
 function playerUnits(beaten){ const out = ['peasant']; for(let i=0;i<beaten;i++) if(UNLOCKS[i]) out.push(UNLOCKS[i]); return out; }
@@ -319,6 +411,7 @@ function spawnBlocks(blocks, team){
 }
 
 // ---------- Simulation ----------
+let sfx = ()=>{}; // replaced by the audio engine in the browser
 function nearestEnemy(u){
   let best = null, bd = 1e12;
   for(const e of S.units){ if(e.dead || e.team===u.team) continue; const dx=e.x-u.x, dy=e.y-u.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=e;} }
@@ -367,6 +460,7 @@ function monkThink(u, dt){
     const dx=best.x-u.x, dy=best.y-u.y, dist=Math.hypot(dx,dy)||0.001; u.face = dx>=0?1:-1;
     if(dist > d.range) moveBy(u, dx, dy, dist, d.spd, dt);
     else if(u.cd<=0){ best.hp = Math.min(best.d.hp, best.hp + d.heal); u.atk = 0.3; u.cd = d.cd;
+      sfx('heal', best.x, best.y);
       for(let i=0;i<5;i++) part(best.x+rnd(-3,3), best.y, rnd(4,10), 0, 0, rnd(10,25), '#8dff8a', 1, 0.6, false, -0.2);
       S.fx.push({k:'beam', x1:u.x+u.face*2, y1:u.y-9, x2:best.x, y2:best.y-5, life:0.15, c:'#b8ffb0'}); }
     return;
@@ -384,7 +478,7 @@ function attack(u, t){
   if(d.proj){ fire(u, t); return; }
   if(d.chain){ chain(u, t); return; }
   let dmg = d.dmg*rnd(0.85,1.15), kb = d.kb || 18;
-  if(d.charge && u.run > 35){ dmg *= d.charge; kb = 110; S.shake = Math.max(S.shake, 1.5); }
+  if(d.charge && u.run > 35){ dmg *= d.charge; kb = 110; S.shake = Math.max(S.shake, 1.5); sfx('charge', u.x, u.y); }
   u.run = 0;
   if(d.vsMount && t.d.mount) dmg *= d.vsMount;
   if(d.cleave){
@@ -402,6 +496,7 @@ function fire(u, t){
   const err = kind==='arrow'?4:kind==='rock'?9:6;
   const ax = t.x + t.mvx*T*0.8 + rnd(-err,err), ay = t.y + t.mvy*T*0.8 + rnd(-err,err);
   const z0 = kind==='rock'?9:7;
+  sfx(kind==='arrow'?'bow':kind==='rock'?'launch':'fireball', u.x, u.y);
   S.projs.push({k:kind, team:u.team, x:u.x+u.face*3, y:u.y, z:z0, vx:(ax-u.x)/T, vy:(ay-u.y)/T, vz:(GRAV*T*T/2 - z0)/T, dmg:d.dmg, splash:d.splash||0});
 }
 function chain(u, t){
@@ -414,15 +509,17 @@ function chain(u, t){
   const pts = [[u.x+u.face*2, u.y-11]]; let dmg = d.dmg;
   for(const e of hits){ pts.push([e.x, e.y-5-e.z]); hurt(e, dmg, u.x, u.y, 25, false); dmg *= 0.75;
     for(let i=0;i<4;i++) part(e.x, e.y, 5, rnd(-40,40), rnd(-40,40), rnd(20,60), '#cfe8ff', 1, 0.4, false); }
-  S.fx.push({k:'bolt', pts, life:0.22});
+  S.fx.push({k:'bolt', pts, life:0.22}); sfx('zap', u.x, u.y);
 }
 function hurt(t, dmg, sx, sy, kb, ranged){
   if(t.dead) return;
   const d = t.d;
   let dx = t.x-sx, dy = t.y-sy, dl = Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
-  if(ranged && d.parry && (sx-t.x)*t.face > 0){ dmg *= 1-d.parry; for(let i=0;i<3;i++) part(t.x+t.face*3, t.y, 5, rnd(-30,30), rnd(-30,30), rnd(20,50), '#fff6c0', 1, 0.3, false); }
+  const parried = ranged && d.parry && (sx-t.x)*t.face > 0;
+  if(parried){ dmg *= 1-d.parry; for(let i=0;i<3;i++) part(t.x+t.face*3, t.y, 5, rnd(-30,30), rnd(-30,30), rnd(20,50), '#fff6c0', 1, 0.3, false); }
   else if(d.armor) dmg *= 1-d.armor;
   t.hp -= dmg; t.flash = 0.08;
+  sfx(parried ? 'clank' : ranged ? 'thunk' : kb >= 60 ? 'smash' : 'hit', t.x, t.y, dmg);
   bleed(t, dx, dy, dmg);
   const m = d.mass||1;
   t.kx += dx*kb/m*2; t.ky += dy*kb/m*2;
@@ -432,6 +529,7 @@ function hurt(t, dmg, sx, sy, kb, ranged){
 function killUnit(u, nx, ny, force, gib){
   if(u.dead) return; u.dead = true; S.kills[1-u.team]++;
   const d = u.d, s = d.scale||1;
+  sfx(d.bones ? 'bones' : d.machine ? 'crash' : 'die', u.x, u.y);
   burst(u, nx, ny, 22*s, gib);
   if(gib && !d.machine) return;
   const f = 25 + force*0.9;
@@ -445,6 +543,7 @@ function explode(x, y, rad, dmg, team, friendly, big){
     hurt(e, a, x+rnd(-0.5,0.5), y+rnd(-0.5,0.5), (big?150:60)*fall, false);
   }
   S.fx.push({k:'ring', x, y, r:rad, life:0.25, max:0.25});
+  sfx(big ? 'bigboom' : 'boom', x, y);
   S.shake = Math.max(S.shake, big?4:2);
   const n = big?40:18;
   for(let i=0;i<n;i++){ const a=Math.random()*6.28, v=rnd(20,90); part(x, y, 2, Math.cos(a)*v, Math.sin(a)*v*0.6, rnd(30,110), pick(DUST), 1, 3, true); }
@@ -686,27 +785,141 @@ if(HEADLESS){
 
 // ---------- UI / game flow ----------
 const $ = id=>document.getElementById(id);
-let mode = 'title', levelIdx = 0, tool = 'peasant', team = 0, speed = 1, hover = null, painting = false, gold = 0, budget = 0;
-let sandboxTheme = 'farm', lastPlacement = {}, sandboxSetup = null, dialogQ = [], dialogDone = null;
-cv = $('cv'); ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+let mode = 'title', levelIdx = 0, tool = null, team = 0, speed = 1, hover = null, painting = false, gold = 0, budget = 0;
+let sandboxTheme = 'farm', lastPlacement = {}, sandboxSetup = null, dialogQ = [], dialogDone = null, placed = [];
+const cam = {x:0, y:0, z:1};
+cv = $('cv'); const dctx = cv.getContext('2d');
+const world = document.createElement('canvas'); world.width = W; world.height = H;
+ctx = world.getContext('2d'); ctx.imageSmoothingEnabled = false;
+let dpr = 1, mm = null;
 
 function fit(){
   const st = $('stage'), cs = getComputedStyle(st);
   const aw = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
   const ah = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 10;
-  let sc = Math.min(aw/W, ah/H); if(sc > 2) sc = Math.floor(sc*2)/2; sc = Math.max(0.5, sc);
-  cv.style.width = Math.floor(W*sc)+'px'; cv.style.height = Math.floor(H*sc)+'px';
+  const sc = Math.max(0.5, Math.min(aw/W, ah/H));
+  const w = Math.floor(W*sc), h = Math.floor(H*sc);
+  cv.style.width = w+'px'; cv.style.height = h+'px';
+  dpr = Math.min(2, window.devicePixelRatio||1);
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
 }
 addEventListener('resize', fit);
+if(window.ResizeObserver) new ResizeObserver(()=>fit()).observe($('stage'));
 
+// ---------- Camera ----------
+function clampCam(){ cam.z = clamp(cam.z, 1, 4); cam.x = clamp(cam.x, 0, W - W/cam.z); cam.y = clamp(cam.y, 0, H - H/cam.z); }
+function resetCam(){ cam.x = 0; cam.y = 0; cam.z = 1; updateZoomUI(); }
+function zoomAt(f, fx, fy){
+  if(fx===undefined){ fx = 0.5; fy = 0.5; }
+  const wx = cam.x + fx*W/cam.z, wy = cam.y + fy*H/cam.z;
+  cam.z = clamp(cam.z*f, 1, 4); cam.x = wx - fx*W/cam.z; cam.y = wy - fy*H/cam.z; clampCam(); updateZoomUI();
+}
+function centerOn(x, y){ cam.x = x - W/cam.z/2; cam.y = y - H/cam.z/2; clampCam(); }
+function updateZoomUI(){ $('zLvl').textContent = cam.z.toFixed(1)+'x'; $('zOut').disabled = cam.z <= 1.001; $('zIn').disabled = cam.z >= 3.999; $('zFit').disabled = cam.z <= 1.001; }
+function viewFrac(e){ const r = cv.getBoundingClientRect(); return {fx:(e.clientX-r.left)/r.width, fy:(e.clientY-r.top)/r.height}; }
+function toField(e){ const {fx, fy} = viewFrac(e); return {x:cam.x + fx*W/cam.z, y:cam.y + fy*H/cam.z}; }
+$('zIn').onclick = ()=>zoomAt(1.5);
+$('zOut').onclick = ()=>zoomAt(1/1.5);
+$('zFit').onclick = resetCam;
+
+// ---------- Audio (8-bit synth) ----------
+const AU = {ctx:null, out:null, nbuf:null, last:{}, voices:0};
+function audioInit(){
+  if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume().catch(()=>{}); return; }
+  try{
+    const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+    const c = new C(); AU.ctx = c;
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 6; comp.connect(c.destination);
+    AU.out = c.createGain(); AU.out.gain.value = 0.55; AU.out.connect(comp);
+    const n = c.createBuffer(1, c.sampleRate, c.sampleRate), d = n.getChannelData(0);
+    let hold = 0; for(let i=0;i<d.length;i++){ if(i%3===0) hold = Math.random()*2-1; d[i] = hold; } // chunky noise, NES-ish
+    AU.nbuf = n;
+  }catch(e){ AU.ctx = null; }
+}
+function chan(vol, pan, t, dur){
+  const c = AU.ctx, g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(Math.max(0.0002, vol), t+0.004); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  if(c.createStereoPanner){ const p = c.createStereoPanner(); p.pan.value = clamp(pan,-1,1); g.connect(p); p.connect(AU.out); } else g.connect(AU.out);
+  AU.voices++; setTimeout(()=>AU.voices--, (dur + (t-c.currentTime) + 0.05)*1000);
+  return g;
+}
+function tone(type, f0, f1, dur, vol, pan, delay){
+  const c = AU.ctx, t = c.currentTime + (delay||0), o = c.createOscillator();
+  o.type = type; o.frequency.setValueAtTime(f0, t); if(f1!==f0) o.frequency.exponentialRampToValueAtTime(Math.max(20,f1), t+dur);
+  o.connect(chan(vol, pan||0, t, dur)); o.start(t); o.stop(t+dur+0.02);
+}
+function noise(dur, vol, pan, ftype, f0, f1, delay){
+  const c = AU.ctx, t = c.currentTime + (delay||0), s = c.createBufferSource(), f = c.createBiquadFilter();
+  s.buffer = AU.nbuf; s.loop = true; f.type = ftype; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(30,f1), t+dur);
+  f.Q.value = ftype==='bandpass' ? 2 : 0.7; s.connect(f); f.connect(chan(vol, pan||0, t, dur)); s.start(t, Math.random()*0.5); s.stop(t+dur+0.02);
+}
+function spatial(x, y){
+  // Louder when zoomed in, quieter when zoomed out. Off-screen fights are muffled.
+  const vw = W/cam.z, vh = H/cam.z, sx = (x-cam.x)/vw, sy = (y-cam.y)/vh;
+  const on = sx >= -0.05 && sx <= 1.05 && sy >= -0.05 && sy <= 1.05;
+  const zf = 0.4 + 0.6*((cam.z-1)/3);
+  return {v: zf*(on ? 1 : 0.25), p: clamp(sx*2-1, -1, 1)*0.6};
+}
+const GAPS = {hit:0.035, smash:0.06, thunk:0.03, clank:0.06, bow:0.045, launch:0.1, fireball:0.1, boom:0.07, bigboom:0.1, zap:0.06, heal:0.12, die:0.05, bones:0.06, crash:0.1, charge:0.12};
+function playSfx(name, x, y, pw){
+  if(!AU.ctx || !save.sound || AU.ctx.state!=='running' || mode==='title' || mode==='map') return;
+  const now = AU.ctx.currentTime;
+  if(now - (AU.last[name]||0) < (GAPS[name]||0.04) || AU.voices > 28) return;
+  AU.last[name] = now;
+  const sp = spatial(x, y), v = sp.v, p = sp.p;
+  const r = speed > 0 && speed < 1 ? 0.6 + 0.4*speed : 1; // slow-mo drops the pitch
+  const P = clamp((pw||10)/20, 0.5, 1.6);
+  switch(name){
+    case 'hit': noise(0.06, 0.22*v*P, p, 'bandpass', 1400*r, 500*r); tone('square', 220*r*rnd(0.9,1.1), 90*r, 0.05, 0.07*v, p); break;
+    case 'smash': noise(0.18, 0.4*v, p, 'lowpass', 900*r, 120*r); tone('square', 110*r, 40*r, 0.16, 0.14*v, p); break;
+    case 'thunk': tone('square', 700*r, 220*r, 0.035, 0.06*v, p); break;
+    case 'clank': tone('square', 1500*r, 1500*r, 0.03, 0.05*v, p); tone('square', 2250*r, 2250*r, 0.04, 0.04*v, p, 0.02); break;
+    case 'bow': tone('triangle', 520*r*rnd(0.95,1.05), 260*r, 0.07, 0.1*v, p); break;
+    case 'launch': tone('triangle', 160*r, 60*r, 0.25, 0.2*v, p); noise(0.12, 0.08*v, p, 'lowpass', 500*r, 200*r); break;
+    case 'fireball': noise(0.3, 0.12*v, p, 'bandpass', 900*r, 250*r); tone('sawtooth', 180*r, 90*r, 0.25, 0.04*v, p); break;
+    case 'boom': noise(0.45, 0.45*v, p, 'lowpass', 1200*r, 60*r); tone('square', 80*r, 30*r, 0.35, 0.18*v, p); break;
+    case 'bigboom': noise(0.8, 0.6*v, p, 'lowpass', 1600*r, 40*r); tone('square', 70*r, 25*r, 0.6, 0.25*v, p); tone('triangle', 55*r, 20*r, 0.7, 0.3*v, p); break;
+    case 'zap': for(let i=0;i<5;i++) tone('square', rnd(900,1900)*r, rnd(300,900)*r, 0.04, 0.07*v, p, i*0.03); noise(0.15, 0.08*v, p, 'highpass', 3000*r, 1500*r); break;
+    case 'heal': [660,880,1320].forEach((f,i)=>tone('triangle', f*r, f*r, 0.07, 0.05*v, p, i*0.05)); break;
+    case 'die': tone('square', rnd(380,520)*r, 70*r, 0.2, 0.07*v, p); break;
+    case 'bones': for(let i=0;i<3;i++) tone('square', rnd(1200,2000)*r, rnd(800,1200)*r, 0.02, 0.05*v, p, i*0.03); break;
+    case 'crash': noise(0.3, 0.25*v, p, 'bandpass', 600*r, 200*r); tone('square', 150*r, 60*r, 0.2, 0.1*v, p); break;
+    case 'charge': for(let i=0;i<3;i++) tone('triangle', 140*r, 70*r, 0.06, 0.18*v, p, i*0.07); break;
+  }
+}
+sfx = playSfx;
+function ui(name){
+  if(!AU.ctx || !save.sound) return;
+  const now = AU.ctx.currentTime; if(now - (AU.last['ui'+name]||0) < 0.04) return; AU.last['ui'+name] = now;
+  switch(name){
+    case 'click': tone('square', 880, 880, 0.025, 0.04); break;
+    case 'select': tone('square', 660, 990, 0.05, 0.05); break;
+    case 'place': tone('square', 520*rnd(0.95,1.05), 780, 0.04, 0.045); break;
+    case 'remove': tone('square', 500, 200, 0.06, 0.05); break;
+    case 'deny': tone('square', 150, 110, 0.12, 0.06); break;
+    case 'text': tone('square', 740, 740, 0.02, 0.03); tone('square', 990, 990, 0.02, 0.025, 0, 0.03); break;
+    case 'fight': [523,659,784,1047].forEach((f,i)=>tone('square', f, f, i===3?0.3:0.09, 0.07, 0, i*0.1)); break;
+    case 'win': [523,659,784,659,784,1047].forEach((f,i)=>tone('square', f, f, i===5?0.5:0.11, 0.07, 0, i*0.12)); [262,330,392,523].forEach((f,i)=>tone('triangle', f, f, 0.2, 0.08, 0, i*0.18)); break;
+    case 'lose': [392,349,311,262].forEach((f,i)=>tone('triangle', f, f*0.97, i===3?0.6:0.22, 0.1, 0, i*0.25)); break;
+    case 'unlock': [784,988,1175,1568].forEach((f,i)=>tone('square', f, f, 0.07, 0.05, 0, i*0.06)); break;
+  }
+}
+const ICON_ON = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor"><path d="M2 6h3l4-3v10l-4-3H2z"/><path d="M11 5h1v6h-1zM13 3h1v10h-1z"/></svg>';
+const ICON_OFF = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor"><path d="M2 6h3l4-3v10l-4-3H2z"/><path d="M11 6h1v1h-1zM12 7h1v1h-1zM13 8h1v1h-1zM13 6h1v1h-1zM11 8h1v1h-1z"/></svg>';
+function updateSoundUI(){ $('btnSound').innerHTML = save.sound ? ICON_ON : ICON_OFF; $('btnSoundT').textContent = 'Sound: ' + (save.sound ? 'On' : 'Off'); }
+function toggleSound(){ save.sound = save.sound ? 0 : 1; writeSave(); updateSoundUI(); audioInit(); ui('select'); }
+$('btnSound').onclick = toggleSound; $('btnSoundT').onclick = toggleSound;
+document.addEventListener('pointerdown', audioInit, true);
+document.addEventListener('keydown', audioInit, true);
+document.addEventListener('click', e=>{ const b = e.target.closest('button'); if(b && !b.classList.contains('card') && b.id!=='btnSound' && b.id!=='btnSoundT' && b.id!=='btnFight') ui('click'); }, true);
+
+// ---------- Screens ----------
 function setBody(m){ document.body.className = 'm-'+m; }
 function showOnly(id){ for(const s of ['scTitle','scMap','scResult']) $(s).hidden = s!==id; }
-
 function iconCanvas(type, t){
   const c = document.createElement('canvas'); c.width = 20; c.height = 20;
   const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
-  const big = (U[type].scale||1) > 1;
-  drawFig(g, type, t, 10, 18, 1, 0, {}, big ? 1.35 : 1.35);
+  drawFig(g, type, t, 10, 18, 1, 0, {}, 1.35);
   return c;
 }
 
@@ -715,11 +928,11 @@ function goTitle(){
   mode = 'title'; setBody('title'); showOnly('scTitle'); $('scDialog').hidden = true; $('resetConfirm').hidden = true;
   $('btnGore').textContent = 'Blood: ' + ['Off','Normal','Extra'][save.gore];
   const total = save.stars.reduce((a,b)=>a+(b||0),0);
-  $('titleFoot').textContent = save.beaten ? `Campaign: ${save.beaten}/${LEVELS.length} battles won · ${total} stars` : 'Tip: drag to place a whole squad at once.';
-  demoBattle(); fit();
+  $('titleFoot').textContent = save.beaten ? `Campaign: ${save.beaten}/${LEVELS.length} battles won · ${total} stars` : 'Tip: drag to place a whole squad at once. Scroll to zoom in.';
+  resetCam(); demoBattle(); fit();
 }
 function demoBattle(){
-  newBattle(pick(THEME_KEYS)); speed = 1;
+  newBattle(pick(THEME_KEYS));
   const armyA = pick([['peasant','spear','archer'],['knight','shield','archer'],['berserker','giant','spear'],['shield','archer','catapult']]);
   const armyB = pick([['goblin','gobarcher','orc'],['skeleton','orc','shaman'],['wolf','goblin','troll'],['orc','gobarcher','shaman']]);
   const place = (types, t)=>{ for(const ty of types){ const n = Math.max(1, Math.round(90/U[ty].cost*1.6)); for(let i=0;i<n;i++){ const x = t===0 ? rnd(20,130) : rnd(350,460); spawn(ty, t, x, rnd(30,H-20)); } } };
@@ -732,7 +945,7 @@ $('btnSandbox').onclick = startSandbox;
 $('btnGore').onclick = ()=>{ save.gore = (save.gore+1)%3; writeSave(); $('btnGore').textContent = 'Blood: ' + ['Off','Normal','Extra'][save.gore]; };
 $('btnReset').onclick = ()=>{ $('resetConfirm').hidden = false; };
 $('resetNo').onclick = ()=>{ $('resetConfirm').hidden = true; };
-$('resetYes').onclick = ()=>{ save = {beaten:0, stars:[], gore:save.gore}; writeSave(); lastPlacement = {}; goTitle(); };
+$('resetYes').onclick = ()=>{ save = {beaten:0, stars:[], gore:save.gore, sound:save.sound}; writeSave(); lastPlacement = {}; goTitle(); };
 
 // ----- Map -----
 function goMap(){
@@ -752,7 +965,7 @@ function goMap(){
     LEVELS.forEach((lv, li)=>{ if(lv.ch!==ci) return;
       const b = document.createElement('button'); b.className = 'lvl' + (li===save.beaten?' next':''); b.disabled = li > save.beaten;
       const st = save.stars[li]||0;
-      b.innerHTML = `<span class="no">${li+1}</span><span class="ln"></span><span class="st">${li<save.beaten ? '★'.repeat(st)+'<span style="color:#3a2e25">'+'★'.repeat(3-st)+'</span>' : li===save.beaten ? 'NEW' : '—'}</span>`;
+      b.innerHTML = `<span class="no">${li+1}</span><span class="ln"></span><span class="st">${li<save.beaten ? '★'.repeat(st)+'<span style="color:#3a2e25">'+'★'.repeat(3-st)+'</span>' : li===save.beaten ? 'PLAY ▶' : '—'}</span>`;
       b.querySelector('.ln').textContent = lv.name;
       b.onclick = ()=>startLevel(li);
       el.appendChild(b);
@@ -771,82 +984,121 @@ function playDialog(lines, done){
 function nextLine(){
   if(!dialogQ.length){ $('scDialog').hidden = true; const d = dialogDone; dialogDone = null; d && d(); return; }
   const [who, text] = dialogQ.shift(), sp = SPEAK[who];
+  ui('text');
   $('dname').textContent = sp[0]; $('dname').style.color = sp[1]; $('dtext').textContent = text;
   const fc = $('dface'), g = fc.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0,0,16,16);
-  const tmp = {name:'', skin:sp[2], hat:sp[4], wpn:'none', r:3}; U.__face = tmp;
+  U.__face = {name:'', skin:sp[2], hat:sp[4], wpn:'none', r:3};
   drawFig(g, '__face', sp[3], 8, 22, 1, 0, {}, 1.6); delete U.__face;
+  updateSteps();
 }
 $('dbox').onclick = nextLine;
 $('dbox').onkeydown = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nextLine(); } };
 
 // ----- Battle setup -----
+function enterBattleUI(){ setBody('battle'); showOnly(null); resetCam(); setSpeed(1); placed = []; fit(); }
 function startLevel(i){
   levelIdx = i; mode = 'campaign'; const lv = LEVELS[i], ch = CHAPTERS[lv.ch];
-  setBody('battle'); showOnly(null); team = 0; speed = 1;
+  team = 0; enterBattleUI();
   newBattle(ch.theme); spawnBlocks(lv.enemy, 1);
   budget = lv.budget; gold = budget;
   if(lastPlacement[i]) for(const p of lastPlacement[i]){ if(gold >= U[p.type].cost){ spawn(p.type, 0, p.x, p.y); gold -= U[p.type].cost; } }
   $('hudChapter').textContent = `Chapter ${lv.ch+1} · ${ch.name}`; $('hudLevel').textContent = `${i+1}. ${lv.name}`;
   $('teamPick').hidden = true; $('btnField').hidden = true;
-  const avail = playerUnits(save.beaten); tool = avail.includes(tool) ? tool : 'peasant';
-  buildTray(avail, true); placeUI(); fit();
+  tool = null;
+  buildTray(playerUnits(save.beaten), true); placeUI();
   const intro = lastPlacement[i] ? [] : lv.intro;
-  playDialog(intro, ()=>setHint(i===0 ? 'Pick a troop below, then click or drag in the blue zone. Right-click removes.' : 'Place your army in the blue zone, then press Fight!'));
+  playDialog(intro, ()=>{ updateSteps(); if(lastPlacement[i]) setHint('Your last army is back in place. Change it or press Fight!', 4000); });
 }
 function startSandbox(){
-  mode = 'sandbox'; setBody('battle'); showOnly(null); speed = 1;
+  mode = 'sandbox'; enterBattleUI();
   newBattle(sandboxTheme);
   if(sandboxSetup) for(const p of sandboxSetup) spawn(p.type, p.team, p.x, p.y);
   $('hudChapter').textContent = 'No budget · no rules'; $('hudLevel').textContent = 'Sandbox';
   $('teamPick').hidden = false; $('btnField').hidden = false; $('btnField').textContent = 'Field: ' + THEMES[sandboxTheme].name;
   const list = playerUnits(save.beaten).concat(hordeUnits(save.beaten));
-  if(!list.includes(tool)) tool = 'peasant';
-  buildTray(list, false); placeUI(); fit();
-  setHint(hordeUnits(save.beaten).length ? 'Pick a side, place both armies, then Fight!' : 'Pick a side, place both armies, then Fight! Win campaign battles to unlock more troops.');
+  if(!list.includes(tool)) tool = null;
+  buildTray(list, false); placeUI();
+  if(!hordeUnits(save.beaten).length) setHint('Win campaign battles to unlock more troops here.', 4000);
 }
 function buildTray(list, showLocked){
   const wrap = $('cards'); wrap.innerHTML = '';
   list.forEach((type, i)=>{
     const d = U[type], b = document.createElement('button'); b.className = 'card'; b.dataset.type = type;
-    b.title = `${d.name} (${i+1}) — ${d.desc}`;
+    b.title = `${d.name}: ${d.desc}`;
     b.appendChild(iconCanvas(type, mode==='sandbox' ? team : 0));
-    b.insertAdjacentHTML('beforeend', `<span class="nm"></span><span class="cost">${mode==='sandbox' ? '&nbsp;' : d.cost+'g'}</span>`);
+    b.insertAdjacentHTML('beforeend', `${i<9?`<span class="key">${i+1}</span>`:''}<span class="nm"></span><span class="cost">${mode==='sandbox' ? '&nbsp;' : d.cost+'g'}</span>`);
     b.querySelector('.nm').textContent = d.name;
-    b.onclick = ()=>{ tool = type; refreshTray(); setHint(`${d.name}: ${d.desc} HP ${d.hp}${mode==='sandbox'?'':' · '+d.cost+' gold'}`); };
+    b.onclick = ()=>{ selectTool(type); };
+    b.onmouseenter = ()=>showInfo(type); b.onmouseleave = ()=>showInfo(tool);
     wrap.appendChild(b);
   });
   if(showLocked){
     const next = Object.keys(UNLOCKS).map(Number).find(k=>k >= save.beaten);
     if(next !== undefined){ const b = document.createElement('div'); b.className = 'card locked'; b.appendChild(iconCanvas(UNLOCKS[next], 0));
-      b.insertAdjacentHTML('beforeend', `<span class="nm">???</span><span class="cost" style="color:var(--dim)">Win ${next+1}</span>`); b.title = `Unlocks after battle ${next+1}`; wrap.appendChild(b); }
+      b.insertAdjacentHTML('beforeend', `<span class="nm">Locked</span><span class="cost" style="color:var(--dim)">Win #${next+1}</span>`); b.title = `A new troop unlocks after battle ${next+1}`; wrap.appendChild(b); }
   }
-  refreshTray();
+  refreshTray(); showInfo(tool);
+}
+function selectTool(type){
+  tool = type; ui('select'); refreshTray(); showInfo(type);
+  if(type==='erase') setHint('Click or drag over troops to remove them. Gold is refunded.', 3000); else setHint('');
 }
 function refreshTray(){
   for(const c of $('cards').children){ if(!c.dataset.type) continue; c.classList.toggle('sel', c.dataset.type===tool); c.classList.toggle('poor', mode==='campaign' && U[c.dataset.type].cost > gold); }
   $('btnErase').classList.toggle('sel', tool==='erase');
-  updateStats();
+  $('btnUndo').disabled = !placed.some(u=>S.units.includes(u));
+  cv.classList.toggle('grab', !tool || S.phase!=='place');
+  updateStats(); updateSteps();
+}
+const PIPS = {hp:[30,60,120,300,700], dmg:[4,8,14,22,35], spd:[12,18,25,35,45], range:[5,11,60,100,200]};
+function pips(v, th){ let n = 0; for(const t of th) if(v >= t) n++; return '<span class="pips">' + [0,1,2,3,4].map(i=>`<i class="${i<n?'on':''}"></i>`).join('') + '</span>'; }
+function showInfo(type){
+  const el = $('info');
+  if(!type){ el.innerHTML = '<h4>Pick a troop</h4><p>Click a troop card to select it. Hover a card to see its stats.</p>'; return; }
+  if(type==='erase'){ el.innerHTML = '<h4>Remove tool</h4><p>Click or drag over troops to take them back. Your gold is refunded.</p>'; return; }
+  const d = U[type], per = Math.max(0.5, d.cd||1);
+  const dps = d.heal ? d.heal/per : d.bomb ? d.dmg : d.dmg*(d.chain?2.5:1)*(d.splash?2:1)*(d.cleave?1.5:1)/per;
+  el.innerHTML = `<h4><span></span><span class="c">${mode==='sandbox'?'':d.cost+' gold'}</span></h4><p></p>
+    <div class="bars"><span>Health</span>${pips(d.hp, PIPS.hp)}<span>${d.heal?'Healing':'Damage'}</span>${pips(dps, PIPS.dmg)}<span>Speed</span>${pips(d.spd, PIPS.spd)}<span>Range</span>${pips(d.range, PIPS.range)}</div>`;
+  el.querySelector('h4 span').textContent = d.name; el.querySelector('p').textContent = d.desc;
 }
 function updateStats(){
   const el = $('hudStats');
-  if(S.phase==='place' && mode==='campaign') el.innerHTML = `<span class="g">● ${gold}</span><span style="color:var(--dim)">/ ${budget} gold</span>`;
+  if(S.phase==='place' && mode==='campaign') el.innerHTML = `<span class="gl">GOLD</span><span class="g">${gold}</span><span class="goldbar"><i style="width:${(gold/budget*100).toFixed(1)}%"></i></span>`;
   else { let a=0,b=0; for(const u of S.units){ if(u.team===0) a++; else b++; } el.innerHTML = `<span class="b">${a}</span><span style="color:var(--dim)">vs</span><span class="p">${b}</span>`; }
+}
+function updateSteps(){
+  const el = $('steps');
+  if(!S || S.phase!=='place' || mode==='title'){ el.hidden = true; $('btnFight').classList.remove('ready'); $('cards').classList.remove('pick'); return; }
+  el.hidden = false;
+  const mine = S.units.some(u=>u.team===0), theirs = S.units.some(u=>u.team===1);
+  const ready = mode==='sandbox' ? mine && theirs : mine;
+  const stage = ready ? 3 : tool && tool!=='erase' ? 2 : 1;
+  [...el.children].forEach((li,i)=>{ li.className = i+1 < stage ? 'done' : i+1===stage ? 'now' : ''; });
+  el.children[1].lastChild.textContent = mode==='sandbox' ? 'Place both armies' : 'Place in the blue zone';
+  $('btnFight').classList.toggle('ready', ready);
+  $('cards').classList.toggle('pick', stage===1 && $('scDialog').hidden);
 }
 function placeUI(){
   const placing = S.phase==='place';
-  $('btnFight').hidden = !placing; $('btnClear').hidden = !placing; $('btnSpeed').hidden = placing;
+  $('btnFight').hidden = !placing;
   $('tray').style.visibility = placing ? 'visible' : 'hidden';
-  $('btnSpeed').textContent = speed===0.5 ? '½x' : speed+'x';
   $('btnBack').innerHTML = mode==='sandbox' ? '&larr; Menu' : '&larr; Map';
-  updateStats();
+  updateSoundUI(); refreshTray();
 }
-function setHint(t){ const h = $('hint'); h.textContent = t; h.hidden = !t; }
+let hintT = 0;
+function setHint(t, ms){ const h = $('hint'); clearTimeout(hintT); h.textContent = t; h.hidden = !t; if(t && ms) hintT = setTimeout(()=>{ h.hidden = true; }, ms); }
 
-// ----- Placement input -----
-function toField(e){ const r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*W, y:(e.clientY-r.top)/r.height*H}; }
+// ----- Speed -----
+const SPEEDS = [0, 0.25, 0.5, 1, 2];
+let lastSpeed = 1;
+function setSpeed(v){ if(v>0) lastSpeed = v; speed = v; for(const b of $('speedCtl').querySelectorAll('button')) b.classList.toggle('on', +b.dataset.sp===v); }
+$('speedCtl').onclick = e=>{ const b = e.target.closest('button'); if(b) setSpeed(+b.dataset.sp); };
+
+// ----- Placement -----
 function snap(p){ return {x:p.x, y:p.y, gx:Math.floor(p.x/GRID)*GRID+GRID/2, gy:Math.floor(p.y/GRID)*GRID+GRID/2+3}; }
 function canPlaceAt(x, y){
-  if(!tool || tool==='erase') return true;
+  if(!tool || tool==='erase') return false;
   const s = snap({x,y}), d = U[tool];
   const inZone = team===0 ? s.gx < ZONE_P : s.gx > ZONE_E;
   if(!inZone || s.gy < 12 || s.gy > H-3) return false;
@@ -855,76 +1107,111 @@ function canPlaceAt(x, y){
   for(const u of S.units){ const need = Math.max(GRID*0.9, (u.d.r + d.r)*0.85); if(Math.abs(u.x-s.gx) < need && Math.abs(u.y-s.gy) < need) return false; }
   return true;
 }
+let denyT = 0;
+function deny(msg){ const n = performance.now(); if(n - denyT > 700){ denyT = n; ui('deny'); setHint(msg, 2500); } }
 function placeAt(p, erase){
   const s = snap(p);
   if(erase || tool==='erase'){
     let best = null, bd = 49;
     for(const u of S.units){ if(mode==='campaign' && u.team!==0) continue; const dx=u.x-p.x, dy=(u.y-4)-p.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=u;} }
-    if(best){ S.units.splice(S.units.indexOf(best),1); if(mode==='campaign') gold += best.d.cost; refreshTray(); }
+    if(best){ S.units.splice(S.units.indexOf(best),1); if(mode==='campaign') gold += best.d.cost; ui('remove'); refreshTray(); }
     return;
   }
-  if(!canPlaceAt(p.x, p.y)) return;
-  spawn(tool, team, s.gx, s.gy);
+  if(!canPlaceAt(p.x, p.y)){
+    const inZone = team===0 ? s.gx < ZONE_P : s.gx > ZONE_E;
+    if(!inZone) deny(team===0 ? 'Troops go in the blue zone on the left.' : 'Purple troops go in the purple zone on the right.');
+    else if(mode==='campaign' && U[tool].cost > gold) deny(`Not enough gold. ${U[tool].name} costs ${U[tool].cost}.`);
+    return;
+  }
+  placed.push(spawn(tool, team, s.gx, s.gy)); ui('place');
   if(mode==='campaign') gold -= U[tool].cost;
   refreshTray();
 }
-let eraseDrag = false;
+function undo(){
+  while(placed.length){ const u = placed.pop(); const i = S.units.indexOf(u); if(i>=0){ S.units.splice(i,1); if(mode==='campaign') gold += u.d.cost; ui('remove'); break; } }
+  refreshTray();
+}
+
+// ----- Pointer: place, pan, pinch, wheel zoom, minimap -----
+const ptrs = new Map(); let pan = null, pinch = null, eraseDrag = false, mmDrag = false;
+function canvasPx(e){ const r = cv.getBoundingClientRect(); return {px:(e.clientX-r.left)/r.width*cv.width, py:(e.clientY-r.top)/r.height*cv.height}; }
+function inMinimap(e){ if(!mm) return null; const {px, py} = canvasPx(e); if(px>=mm.mx && px<=mm.mx+mm.mw && py>=mm.my && py<=mm.my+mm.mh) return {x:(px-mm.mx)/mm.mw*W, y:(py-mm.my)/mm.mh*H}; return null; }
 cv.addEventListener('contextmenu', e=>e.preventDefault());
 cv.addEventListener('pointerdown', e=>{
-  if(!S || S.phase!=='place' || mode==='title' || !$('scDialog').hidden) return;
-  cv.setPointerCapture(e.pointerId); painting = true; eraseDrag = e.button===2 || e.shiftKey;
+  if(!S || mode==='title') return;
+  cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  const m = inMinimap(e); if(m){ centerOn(m.x, m.y); mmDrag = true; return; }
+  if(ptrs.size===2){ painting = false; pan = null; const [a,b] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x-b.x, a.y-b.y)||1, z:cam.z}; return; }
+  const placing = S.phase==='place' && $('scDialog').hidden;
+  const wantPan = !placing || e.button===1 || e.altKey || e.ctrlKey || e.metaKey || (!tool && e.button!==2);
+  if(wantPan){
+    pan = {x:e.clientX, y:e.clientY, cx:cam.x, cy:cam.y, moved:false};
+    if(placing && !tool) deny(cam.z > 1 ? 'Pick a troop card below first. (Dragging moves the view.)' : 'Pick a troop card below first.');
+    return;
+  }
+  painting = true; eraseDrag = e.button===2 || e.shiftKey;
   placeAt(toField(e), eraseDrag);
 });
 cv.addEventListener('pointermove', e=>{
-  const p = toField(e); hover = snap(p);
-  if(painting && S.phase==='place') placeAt(p, eraseDrag);
+  hover = snap(toField(e));
+  if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(mmDrag){ const m = inMinimap(e); if(m) centerOn(m.x, m.y); return; }
+  if(pinch && ptrs.size===2){ const [a,b] = [...ptrs.values()], d = Math.hypot(a.x-b.x, a.y-b.y)||1, r = cv.getBoundingClientRect();
+    zoomAt(pinch.z*d/pinch.d/cam.z, ((a.x+b.x)/2-r.left)/r.width, ((a.y+b.y)/2-r.top)/r.height); return; }
+  if(pan){ const r = cv.getBoundingClientRect(); cam.x = pan.cx - (e.clientX-pan.x)/r.width*W/cam.z; cam.y = pan.cy - (e.clientY-pan.y)/r.height*H/cam.z; clampCam(); return; }
+  if(painting && S.phase==='place') placeAt(toField(e), eraseDrag);
 });
-cv.addEventListener('pointerup', ()=>{ painting = false; });
+const endPtr = e=>{ ptrs.delete(e.pointerId); if(ptrs.size<2) pinch = null; pan = null; painting = false; mmDrag = false; };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
 cv.addEventListener('pointerleave', ()=>{ hover = null; });
+cv.addEventListener('wheel', e=>{ if(!S || mode==='title') return; e.preventDefault(); const {fx, fy} = viewFrac(e); zoomAt(Math.pow(1.0015, -e.deltaY), fx, fy); }, {passive:false});
 
-$('btnErase').onclick = ()=>{ tool = tool==='erase' ? (PLAYER_ORDER[0]) : 'erase'; refreshTray(); setHint(tool==='erase' ? 'Click or drag over troops to remove them.' : ''); };
+$('btnErase').onclick = ()=>selectTool(tool==='erase' ? null : 'erase');
+$('btnUndo').onclick = undo;
 $('teamPick').onclick = e=>{ const b = e.target.closest('button'); if(!b) return; team = +b.dataset.team;
   for(const x of $('teamPick').children) x.classList.toggle('on', x===b);
   for(const c of $('cards').children){ if(!c.dataset.type) continue; c.replaceChild(iconCanvas(c.dataset.type, team), c.querySelector('canvas')); } };
 $('btnClear').onclick = ()=>{
   if(mode==='campaign'){ S.units = S.units.filter(u=>u.team!==0); gold = budget; } else S.units = [];
-  refreshTray();
+  placed = []; refreshTray();
 };
 $('btnField').onclick = ()=>{
   sandboxTheme = THEME_KEYS[(THEME_KEYS.indexOf(sandboxTheme)+1)%THEME_KEYS.length];
   makeGround(sandboxTheme); S.theme = sandboxTheme; $('btnField').textContent = 'Field: ' + THEMES[sandboxTheme].name;
 };
-$('btnSpeed').onclick = ()=>{ speed = speed===1 ? 2 : speed===2 ? 0.5 : 1; placeUI(); };
 $('btnBack').onclick = ()=>{ if(mode==='sandbox') goTitle(); else goMap(); };
 $('btnFight').onclick = startFight;
 
 function startFight(){
   if(S.phase!=='place' || !$('scDialog').hidden) return;
   const mine = S.units.filter(u=>u.team===0), theirs = S.units.filter(u=>u.team===1);
-  if(!mine.length){ setHint(mode==='sandbox' ? 'Place some Blue troops first.' : 'Place at least one troop first.'); return; }
-  if(!theirs.length){ setHint('Place some Purple troops first. Switch sides on the left of the tray.'); return; }
+  if(!mine.length){ deny(mode==='sandbox' ? 'Place some Blue troops first.' : 'Place at least one troop in the blue zone first.'); return; }
+  if(!theirs.length){ deny('Place some Purple troops too. Switch sides with the Blue/Purple buttons.'); return; }
   if(mode==='campaign') lastPlacement[levelIdx] = mine.map(u=>({type:u.type, x:u.x, y:u.y}));
   else sandboxSetup = S.units.map(u=>({type:u.type, team:u.team, x:u.x, y:u.y}));
-  S.start = [mine.length, theirs.length]; S.phase = 'fight'; S.t = 0; tool = tool==='erase' ? 'peasant' : tool;
-  setHint(''); placeUI();
+  S.start = [mine.length, theirs.length]; S.phase = 'fight'; S.t = 0;
+  ui('fight'); setHint('Scroll or pinch to zoom, drag to look around. Use Speed to slow it down.', 3500); placeUI();
   onEnd = w => setTimeout(()=>showResult(w), 900);
 }
 
 // ----- Results -----
 function showResult(w){
-  if(mode==='title') return;
-  showOnly('scResult');
+  if(mode==='title' || mode==='map') return;
+  showOnly('scResult'); setHint('');
   const alive = S.units.filter(u=>u.team===0).length, aliveE = S.units.filter(u=>u.team===1).length;
   const lost = S.start[0]-alive, slain = S.start[1]-aliveE;
   const rT = $('rTitle'), rS = $('rStars'), rU = $('rUnlock'), rB = $('rBtns'); rU.innerHTML = ''; rB.innerHTML = '';
   const btn = (label, cls, fn)=>{ const b = document.createElement('button'); b.className = 'btn '+cls; b.textContent = label; b.onclick = fn; rB.appendChild(b); return b; };
   if(mode==='sandbox'){
+    ui('win');
     rT.textContent = w===0 ? 'Blue wins' : w===1 ? 'Purple wins' : 'Nobody wins'; rT.className = w===1 ? 'lose' : 'win'; rS.innerHTML = '';
     $('rStats').innerHTML = `<span>Blue survivors</span><b>${alive} / ${S.start[0]}</b><span>Purple survivors</span><b>${aliveE} / ${S.start[1]}</b><span>Battle time</span><b>${Math.round(S.t)}s</b>`;
     btn('Rematch', 'gold', startSandbox); btn('Clear field', '', ()=>{ sandboxSetup = null; startSandbox(); }); btn('Menu', '', goTitle);
+    rB.firstChild.focus();
     return;
   }
   const lv = LEVELS[levelIdx], win = w===0;
+  ui(win ? 'win' : 'lose');
   rT.textContent = win ? 'Victory!' : 'Defeat'; rT.className = win ? 'win' : 'lose';
   let stars = 0;
   if(win){ const surv = alive/Math.max(1,S.start[0]); stars = surv >= 0.6 ? 3 : surv >= 0.3 ? 2 : 1; }
@@ -932,15 +1219,17 @@ function showResult(w){
   $('rStats').innerHTML = `<span>Enemies slain</span><b>${slain} / ${S.start[1]}</b><span>Troops lost</span><b>${lost} / ${S.start[0]}</b>` +
     (win ? `<span>Stars</span><b>${stars>=3?'Flawless-ish':stars===2?'Solid':'Messy'}</b>` : `<span>Tip</span><b style="font-family:var(--f-body);font-size:13px">${defeatTip(lv)}</b>`);
   const after = ()=>{
-    if(!win){ btn('Try again', 'gold', ()=>startLevel(levelIdx)); btn('Map', '', goMap); return; }
+    if(!win){ btn('Try again', 'gold', ()=>startLevel(levelIdx)); btn('Map', '', goMap); rB.firstChild.focus(); return; }
     let unlocked = null;
     if(levelIdx >= save.beaten){ save.beaten = levelIdx+1; unlocked = UNLOCKS[levelIdx]; }
     save.stars[levelIdx] = Math.max(save.stars[levelIdx]||0, stars); writeSave();
     if(unlocked){ const d = U[unlocked]; const box = document.createElement('div'); box.className = 'unlock'; box.appendChild(iconCanvas(unlocked, 0));
-      box.insertAdjacentHTML('beforeend', `<div><small>New troop unlocked</small><strong></strong><p></p></div>`); box.querySelector('strong').textContent = d.name; box.querySelector('p').textContent = d.desc; rU.appendChild(box); }
+      box.insertAdjacentHTML('beforeend', `<div><small>New troop unlocked</small><strong></strong><p></p></div>`); box.querySelector('strong').textContent = d.name; box.querySelector('p').textContent = d.desc; rU.appendChild(box);
+      setTimeout(()=>ui('unlock'), 700); }
     if(levelIdx === LEVELS.length-1){ const box = document.createElement('div'); box.className='unlock'; box.innerHTML = '<div><small>Campaign complete</small><strong>Tinyvale is safe</strong><p>Every Horde troop is now in Sandbox.</p></div>'; rU.appendChild(box); }
-    if(levelIdx < LEVELS.length-1) btn('Next battle', 'gold', ()=>startLevel(levelIdx+1)); else btn('Sandbox', 'gold', startSandbox);
+    if(levelIdx < LEVELS.length-1) btn('Next battle ▶', 'gold', ()=>startLevel(levelIdx+1)); else btn('Sandbox ▶', 'gold', startSandbox);
     btn('Replay', '', ()=>startLevel(levelIdx)); btn('Map', '', goMap);
+    rB.firstChild.focus();
   };
   if(win && levelIdx >= save.beaten && lv.outro.length){ $('scResult').hidden = true; playDialog(lv.outro, ()=>{ $('scResult').hidden = false; after(); }); }
   else after();
@@ -958,15 +1247,59 @@ function defeatTip(lv){
 
 // ----- Keyboard -----
 addEventListener('keydown', e=>{
+  if(e.key==='m' || e.key==='M'){ toggleSound(); return; }
   if(mode==='title' || mode==='map') return;
   if(!$('scDialog').hidden){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nextLine(); } return; }
+  if(!$('scResult').hidden) return;
+  const k = e.key;
+  if(k==='+' || k==='='){ zoomAt(1.5); return; }
+  if(k==='-' || k==='_'){ zoomAt(1/1.5); return; }
+  if(k==='0'){ resetCam(); return; }
+  const panStep = 30/cam.z;
+  if(k==='ArrowLeft' || k==='a' || k==='A'){ cam.x -= panStep; clampCam(); e.preventDefault(); return; }
+  if(k==='ArrowRight' || k==='d' || k==='D'){ cam.x += panStep; clampCam(); e.preventDefault(); return; }
+  if(k==='ArrowUp' || k==='w' || k==='W'){ cam.y -= panStep; clampCam(); e.preventDefault(); return; }
+  if(k==='ArrowDown' || k==='s' || k==='S'){ cam.y += panStep; clampCam(); e.preventDefault(); return; }
+  if(k==='p' || k==='P'){ setSpeed(speed===0 ? lastSpeed : 0); return; }
+  if(k==='[' || k===','){ const i = SPEEDS.indexOf(speed); if(i>0) setSpeed(SPEEDS[i-1]); return; }
+  if(k===']' || k==='.'){ const i = SPEEDS.indexOf(speed); if(i<SPEEDS.length-1) setSpeed(SPEEDS[i+1]); return; }
   if(S.phase==='place'){
-    if(e.key===' '){ e.preventDefault(); startFight(); }
-    else if(e.key==='r'||e.key==='R') $('btnErase').click();
-    else if(/^[1-9]$/.test(e.key)){ const c = [...$('cards').children].filter(x=>x.dataset.type)[+e.key-1]; if(c) c.click(); }
+    if(k===' '){ e.preventDefault(); startFight(); }
+    else if(k==='r' || k==='R') $('btnErase').click();
+    else if(k==='z' || k==='Z') undo();
+    else if(/^[1-9]$/.test(k)){ const c = [...$('cards').children].filter(x=>x.dataset.type)[+k-1]; if(c) c.click(); }
   }
-  if(e.key==='Escape') $('btnBack').click();
+  if(k==='Escape') $('btnBack').click();
 });
+
+// ----- Present: world canvas -> zoomed display canvas + overlays -----
+function present(){
+  const g = dctx, dw = cv.width, dh = cv.height; g.imageSmoothingEnabled = false;
+  const vw = W/cam.z, vh = H/cam.z, k = dw/vw;
+  g.drawImage(world, cam.x, cam.y, vw, vh, 0, 0, dw, dh);
+  const fs = Math.max(10, Math.round(dw/56));
+  const sx = x=>(x-cam.x)*k, sy = y=>(y-cam.y)*k;
+  const label = (t, x, y, c, size)=>{
+    g.font = `700 ${size||fs}px Silkscreen, "Courier New", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const w = g.measureText(t).width + (size||fs), h = (size||fs)*1.6;
+    g.fillStyle = 'rgba(0,0,0,0.72)'; g.fillRect(Math.round(x-w/2), Math.round(y-h/2), Math.round(w), Math.round(h));
+    g.fillStyle = c; g.fillText(t, x, y+1);
+  };
+  if(mode!=='title' && S.phase==='place'){
+    label(mode==='sandbox' ? 'BLUE SIDE' : 'YOUR SIDE', sx(ZONE_P/2), sy(0)+fs*1.4, '#9bbcff');
+    label(mode==='sandbox' ? 'PURPLE SIDE' : 'ENEMY ARMY', sx((ZONE_E+W)/2), sy(0)+fs*1.4, mode==='sandbox' ? '#d8a0f5' : '#ff8a8a');
+    const mine = S.units.some(u=>u.team===0);
+    if(!mine && tool && tool!=='erase' && team===0 && $('scDialog').hidden){ const b = Math.sin(performance.now()/180)*fs*0.3; label('PLACE TROOPS HERE', sx(ZONE_P/2), sy(H/2)+b, '#f0b93b'); }
+  }
+  if(mode!=='title' && S.phase==='fight' && speed===0) label('PAUSED  ·  press P', dw/2, dh/2, '#f0b93b', fs*1.6);
+  else if(mode!=='title' && S.phase==='fight' && speed<1) label('SLOW-MO ' + (speed===0.25 ? '¼' : '½') + 'x', dw/2, fs*1.4, '#9fd4ff');
+  if(cam.z > 1.02 && mode!=='title'){
+    const mw = Math.round(dw*0.2), mh = Math.round(mw*H/W), pad = Math.round(8*dpr), mx = dw-mw-pad, my = pad;
+    mm = {mx, my, mw, mh};
+    g.fillStyle = '#000'; g.fillRect(mx-2*dpr, my-2*dpr, mw+4*dpr, mh+4*dpr); g.drawImage(world, 0, 0, W, H, mx, my, mw, mh);
+    g.strokeStyle = '#f0b93b'; g.lineWidth = Math.max(1, dpr*1.5); g.strokeRect(mx+cam.x/W*mw, my+cam.y/H*mh, mw/cam.z, mh/cam.z);
+  } else mm = null;
+}
 
 // ----- Loop -----
 let last = performance.now(), acc = 0;
@@ -974,8 +1307,8 @@ function frame(now){
   const dt = Math.min(0.1, (now-last)/1000); last = now;
   if(S){
     if(S.phase==='place'){ acc = 0; stepSettle(dt); }
-    else { acc += dt*(mode==='title'?1:speed); let n = 0; while(acc >= STEP && n < 8){ step(STEP); acc -= STEP; n++; } if(n===8) acc = 0; if(S.phase!=='place') updateStatsThrottled(); }
-    render();
+    else { acc += dt*(mode==='title' ? 1 : speed); let n = 0; while(acc >= STEP && n < 8){ step(STEP); acc -= STEP; n++; } if(n===8) acc = 0; updateStatsThrottled(); }
+    render(); present();
   }
   requestAnimationFrame(frame);
 }
@@ -983,6 +1316,7 @@ function stepSettle(dt){ for(const u of S.units){ u.walk += dt*2; } }
 let statT = 0; function updateStatsThrottled(){ const n = performance.now(); if(n-statT > 200){ statT = n; if(mode!=='title') updateStats(); } }
 
 loadSave();
+updateSoundUI();
 goTitle();
 requestAnimationFrame(frame);
 })();
